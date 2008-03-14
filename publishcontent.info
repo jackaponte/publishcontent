@@ -1,0 +1,3 @@
+; $Id$
+name = Publish Content
+description = "Adds a Publish Content access control to each nodetype for more granular access to unpublished nodes."

@@ -1,0 +1,155 @@
+<?php
+// $Id$
+
+/**
+* @file
+* This module provides another access permission to publish content
+* for each nodetype available. If a user has publish content permission
+* on a nodetype, they will be able to view, edit, and publish (but
+* not delete) unpublished nodes.
+* 
+* Many thanks to everyone that contributed to node_access_example.module.
+* Your work made this module possible.
+*/
+
+/**
+* Displays help and module information
+*/
+function publishcontent_help($section='') {
+
+  $output = '';
+  
+  switch ($section) {
+    case "admin/help#publishcontent":
+	  $output = '<p>'. t("Adds an additional level of permissions on a per-nodetype basis that allows a user to view, edit, and publish unpublished nodes without being the content creator or having Administer Nodes permission."). '<p>';
+	  break;
+  }
+  
+  return $output;
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function publishcontent_enable() {
+  node_access_rebuild();
+}
+
+/**
+ * Implementation of hook_disable().
+ */
+function publishcontent_disable() {
+  publishcontent_disabling(TRUE);
+  node_access_rebuild();
+}
+
+/**
+ * Simple function to make sure we don't respond with grants when disabling
+ * ourselves.
+ */
+function publishcontent_disabling($set = NULL) {
+  static $disabling = false;
+  if ($set !== NULL) {
+    $disabling = $set;
+  }
+  return $disabling;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function publishcontent_perm() {
+  $perms = array('publish all content');
+
+  foreach (node_get_types() as $type) {
+    if ($type->module == 'node') {
+      $name = check_plain($type->type);
+      $perms[] = 'publish '. $name .' content';
+    }
+  }
+
+  return $perms;
+}
+
+/**
+ * Implementation of hook_node_grants().
+ */
+function publishcontent_node_grants($account, $op) {
+  if ($op == 'view' && user_access('publish '. $name .' content', $account)) {
+    $grants['publishcontent'] = array(1);
+  }
+
+  if ($op == 'update' && user_access('publish '. $name .' content', $account)) {
+    $grants['publishcontent'] = array(1);
+  }
+
+  $grants['publishcontent_author'] = array($account->uid);
+  return $grants;
+}
+
+/**
+ * Implementation of hook_node_access_records().
+ *
+ * All node access modules must implement this hook. If the module is
+ * interested in the privacy of the node passed in, return a list
+ * of node access values for each grant ID we offer. Since this
+ * example module only offers 1 grant ID, we will only ever be
+ * returning one record.
+ */
+function publishcontent_node_access_records($node) {
+  if (publishcontent_disabling()) {
+    return;
+  }
+
+  // We only care about the node if it's been marked private. If not, it is
+  // treated just like any other node and we completely ignore it.
+  if ($node->unpublished) {
+    $grants = array();
+    $grants[] = array(
+      'realm' => 'publishcontent', 
+      'gid' => TRUE, 
+      'grant_view' => TRUE, 
+      'grant_update' => TRUE, 
+      'grant_delete' => FALSE,
+      'priority' => 0,
+    );
+
+    // For the publishcontent_author array, the GID is equivalent to a UID, which
+    // means there are many many groups of just 1 user. 
+    $grants[] = array(
+      'realm' => 'publishcontent_author', 
+      'gid' => $node->uid, 
+      'grant_view' => TRUE, 
+      'grant_update' => TRUE, 
+      'grant_delete' => TRUE,
+      'priority' => 0,
+    );
+    return $grants;
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ *
+ * - "delete", "insert", and "update":
+ * The module must track the access status of the node.
+ */
+function publishcontent_nodeapi(&$node, $op, $arg = 0) {
+  switch ($op) {
+    case 'load':
+      $result = db_fetch_object(db_query('SELECT * FROM {publishcontent} WHERE nid = %d', $node->nid));
+      $node->unpublished = $result->unpublished;
+      break;
+    case 'delete':
+      db_query('DELETE FROM {publishcontent} WHERE nid = %d', $node->nid);
+      break;
+    case 'insert':
+      db_query('INSERT INTO {publishcontent} (nid, unpublished) VALUES (%d, %d)', $node->nid, $node->unpublished);
+      break;
+    case 'update':
+      db_query('UPDATE {publishcontent} SET unpublished = %d WHERE nid = %d', $node->unpublished, $node->nid);
+      break;
+  }
+}
+
+?>
