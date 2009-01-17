@@ -3,35 +3,12 @@
 
 /**
  * Implementation of hook_install().
+ * 
+ * In drupal 5, you cannot alter menu, so you have to make sure 
+ * publishcontent_menu (hook_menu) is called before node_menu
+ * so that node/{$nid} is registered by publishcntent_menu rather
+ * than node_menu.
  */
 function publishcontent_install() {
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      db_query("
-          CREATE TABLE {publishcontent} (
-            nid int(10) unsigned NOT NULL default '0' PRIMARY KEY,
-            private int,
-            KEY node_publishcontent_nid (nid)
-          ) /*!40100 DEFAULT CHARACTER SET utf8 */;
-      ");
-      break;
-    case 'pgsql':
-      db_query("
-          CREATE TABLE {publishcontent} (
-            nid int NOT NULL default '0',
-            private int,
-            PRIMARY KEY (nid));
-      ");
-      break;
-  }
-}
-
-/**
- * Implementation of hook_uninstall().
- */
-function publishcontent_uninstall() {
-  if (db_table_exists('publishcontent')) {
-    db_query("DROP TABLE {publishcontent}");
-  }
+   db_query("UPDATE {system} SET weight='-1' WHERE name = 'publishcontent' AND type='module';");
 }
