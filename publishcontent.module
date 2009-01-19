@@ -79,3 +79,32 @@ function publishcontent_toggle_status($node) {
   drupal_set_message(_publishcontent_get_message($node->nid, $node->title, $node->status));
   drupal_goto('node/'. $node->nid);
 }
+
+/**
+ * Use views_data_alter to add items to the node table that are
+ * relevant to publishcontent.
+ */
+function publishcontent_views_data_alter(&$data) {
+  // new comments
+  $data['node']['publishcontent'] = array(
+    'title' => t('Publish link'),
+    'help' => t('Display a link to publish the node. Enter the text of this link into the option field; if blank the default "Publish" will be used.'),
+    'field' => array(
+      'handler' => 'publishcontent_views_handler_field_node_link',
+    ),
+  );
+}
+
+function publishcontent_views_handlers() {
+  return array(
+    'info' => array(
+      'path' => drupal_get_path('module', 'publishcontent'),
+    ),
+    'handlers' => array(
+      // field handlers
+      'publishcontent_views_handler_field_node_link' => array(
+        'parent' => 'views_handler_field',
+      ),
+    ),
+  );
+}
