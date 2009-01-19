@@ -1,3 +1,4 @@
 ; $Id$
 name = Publish Content
 description = "Adds a 'Publish' or 'Unpublish' link on the node edit/view pages,<br />and a field 'Publish Link' if the Views module is enabled."
+core = 6.x

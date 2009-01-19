@@ -9,29 +9,31 @@
  *
  * @todo add test for un/publish *all* content
  */
-class PublishContentWebCaseTest extends DrupalTestCase {
+class PublishContentWebCaseTest extends DrupalWebTestCase {
 
   /**
    * Drupal SimpleTest method: return metadata about the test.
    */
-  function get_info() {
+  function getInfo() {
     return array(
       'name'  => t('Publish Content: access control'),
-      'desc'  => t('Executes test suite for Publish Content module.'),
-      'group' => t('Publish Content module'),
+      'description'  => t('Executes test suite for Publish Content module.'),
+      'group' => t('Publish Content'),
     );
   }
 
   function setUp() {
-    parent::setUp();
-
-    $this->drupalModuleEnable('publishcontent');
+    parent::setUp('publishcontent');
   }
 
+  /**
+   * test the access for the owner of a node without the permission to in/publish
+   * owner of a node can see it even if unpublished by default in Drupal
+   */
   function testNoPermissionByOwner() {
     // Prepare a user to do the stuff
-    $web_user = $this->drupalCreateUserRolePerm();
-    $this->drupalLoginUser($web_user);
+    $web_user = $this->drupalCreateUser(array('access content'));
+    $this->drupalLogin($web_user);
     $node = $this->drupalCreateNode(
       array(
         'type' => 'page',
@@ -41,11 +43,11 @@ class PublishContentWebCaseTest extends DrupalTestCase {
     );
     $nid = $node->nid;
 
-    $html = $this->drupalGet(url('node/'. $nid .'/publish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/publish');
     $node = node_load($nid, NULL, TRUE);
     $this->assertEqual($node->status, 1);
 
-    $html = $this->drupalGet(url('node/'. $nid .'/unpublish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/unpublish');
     $node = node_load($nid, NULL, TRUE);
     $this->assertEqual($node->status, 1);
 
@@ -54,42 +56,45 @@ class PublishContentWebCaseTest extends DrupalTestCase {
     node_save($node);
 
 
-    $html = $this->drupalGet(url('node/'. $nid .'/publish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/publish');
     $node = node_load($nid, NULL, TRUE);
     $this->assertEqual($node->status, 0);
 
-    $html = $this->drupalGet(url('node/'. $nid .'/unpublish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/unpublish');
     $node = node_load($nid, NULL, TRUE);
     $this->assertEqual($node->status, 0);
 
-    $html = $this->drupalGet(url('node/'. $nid, NULL, NULL, TRUE));
-    $this->assertTitle($node->title .' | '. variable_get('site_name', 'Drupal'),
+    $html = $this->drupalGet('node/'. $nid);
+    $this->assertResponse(200);
+    $this->assertTitle($node->title . ' | '. variable_get('site_name', 'Drupal'),
                        'node can be viewed by owner even if unpublished');
   }
 
   function testNoPermissionAndNotOwner() {
-    // Prepare a user to do the stuff
-    $web_user = $this->drupalCreateUserRolePerm();
-    $this->drupalLoginUser($web_user);
+    $owner = $this->drupalCreateUser(array('access content'));
     $node = $this->drupalCreateNode(
       array(
         'type' => 'page',
-        'uid' => 0,
+        'uid' => $owner->uid,
         'status' => 1,
       )
     );
+
+    $web_user = $this->drupalCreateUser(array('access content'));
+    $this->drupalLogin($web_user);
+
     $nid = $node->nid;
 
-    $html = $this->drupalGet(url('node/'. $nid .'/publish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/publish');
     $node = node_load($nid, NULL, TRUE);
     $this->assertEqual($node->status, 1);
 
-    $html = $this->drupalGet(url('node/'. $nid .'/unpublish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/unpublish');
     $node = node_load($nid, NULL, TRUE);
     $this->assertEqual($node->status, 1);
 
-    $html = $this->drupalGet(url('node/'. $nid, NULL, NULL, TRUE));
-    $this->assertTitle($node->title .' | '. variable_get('site_name', 'Drupal'),
+    $html = $this->drupalGet('node/'. $nid);
+    $this->assertTitle($node->title . ' | '. variable_get('site_name', 'Drupal'),
                        'node can be viewed even if unpublished');
 
     // unpublish node
@@ -97,24 +102,24 @@ class PublishContentWebCaseTest extends DrupalTestCase {
     node_save($node);
 
 
-    $html = $this->drupalGet(url('node/'. $nid .'/publish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/publish');
     $node = node_load($nid, NULL, TRUE);
     $this->assertEqual($node->status, 0);
 
-    $html = $this->drupalGet(url('node/'. $nid .'/unpublish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/unpublish');
     $node = node_load($nid, NULL, TRUE);
     $this->assertEqual($node->status, 0);
 
-    $html = $this->drupalGet(url('node/'. $nid, NULL, NULL, TRUE));
-    $this->assertText('Access denied | '. variable_get('site_name', 'Drupal'),
+    $html = $this->drupalGet('node/'. $nid);
+    $this->assertText('Access denied' . ' | '. variable_get('site_name', 'Drupal'),
                       'node MUST BE not viewable if unpublished');
   }
 
 
   function testDoPublishAndUnpublishByNodeOwner() {
     $type = 'page';
-    $web_user = $this->drupalCreateUserRolePerm(array('un/publish '. $type .' content', 'access content'));
-    $this->drupalLoginUser($web_user);
+    $web_user = $this->drupalCreateUser(array('un/publish '. $type .' content'));
+    $this->drupalLogin($web_user);
 
 
     $node = $this->drupalCreateNode(
@@ -126,36 +131,37 @@ class PublishContentWebCaseTest extends DrupalTestCase {
     );
     $nid = $node->nid;
 
-    $html = $this->drupalGet(url('node/'. $nid .'/publish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/publish');
     $node = node_load($nid, NULL, TRUE);
-    $this->assertEqual($node->status, 1, 'node is still published');
+    $this->assertEqual($node->status, 1, 'node should be still published');
 
-    $html = $this->drupalGet(url('node/'. $nid .'/unpublish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/unpublish');
     $this->assertText(_publishcontent_get_message($node->nid, $node->title, FALSE),
-                      'drupal_set_message working for unpublish.');
+                      'drupal_set_message not working for unpublish.');
     $node = node_load($nid, NULL, TRUE);
-    $this->assertEqual($node->status, 0, 'node is now unpublished');
+    $this->assertEqual($node->status, 0, 'node should be now unpublished');
 
-    $html = $this->drupalGet(url('node/'. $nid, NULL, NULL, TRUE));
-    $this->assertTitle($node->title .' | '. variable_get('site_name', 'Drupal'),
+    $html = $this->drupalGet('node/'. $nid);
+    $this->assertTitle($node->title . ' | '. variable_get('site_name', 'Drupal'),
                        'node can be viewed even if unpublished');
 
-    $html = $this->drupalGet(url('node/'. $nid .'/unpublish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/unpublish');
     $node = node_load($nid, NULL, TRUE);
-    $this->assertEqual($node->status, 0, 'node is still unpublished');
+    $this->assertEqual($node->status, 0, 'node should be still unpublished');
 
-    $html = $this->drupalGet(url('node/'. $nid .'/publish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/publish');
     $this->assertText(_publishcontent_get_message($node->nid, $node->title, TRUE),
-                      'drupal_set_message working for publish.');
+                      'drupal_set_message not working for publish.');
     $node = node_load($nid, NULL, TRUE);
-    $this->assertEqual($node->status, 1, 'node is now published');
+    $this->assertEqual($node->status, 1, 'node should be now published');
   }
+
 
 
   function testDoPublishAndUnpublishNotByNodeOwner() {
     $type = 'page';
-    $web_user = $this->drupalCreateUserRolePerm(array('un/publish '. $type .' content', 'access content'));
-    $this->drupalLoginUser($web_user);
+    $web_user = $this->drupalCreateUser(array('un/publish '. $type .' content'));
+    $this->drupalLogin($web_user);
 
 
     $node = $this->drupalCreateNode(
@@ -167,75 +173,28 @@ class PublishContentWebCaseTest extends DrupalTestCase {
     );
     $nid = $node->nid;
 
-    $html = $this->drupalGet(url('node/'. $nid .'/publish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/publish');
     $node = node_load($nid, NULL, TRUE);
-    $this->assertEqual($node->status, 1, 'node is still published');
+    $this->assertEqual($node->status, 1, 'node should be still published');
 
-    $html = $this->drupalGet(url('node/'. $nid .'/unpublish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/unpublish');
     $this->assertText(_publishcontent_get_message($node->nid, $node->title, FALSE),
                       'drupal_set_message working for unpublish.');
     $node = node_load($nid, NULL, TRUE);
-    $this->assertEqual($node->status, 0, 'node is now unpublished');
+    $this->assertEqual($node->status, 0, 'node should be now unpublished');
 
-    $html = $this->drupalGet(url('node/'. $nid, NULL, NULL, TRUE));
-    $this->assertTitle($node->title .' | '. variable_get('site_name', 'Drupal'),
+    $html = $this->drupalGet('node/'. $nid);
+    $this->assertTitle($node->title . ' | '. variable_get('site_name', 'Drupal'),
                        'node MUST BE viewable even if unpublished');
 
-    $html = $this->drupalGet(url('node/'. $nid .'/unpublish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/unpublish');
     $node = node_load($nid, NULL, TRUE);
-    $this->assertEqual($node->status, 0, 'node is still unpublished');
+    $this->assertEqual($node->status, 0, 'node should be still unpublished');
 
-    $html = $this->drupalGet(url('node/'. $nid .'/publish', NULL, NULL, TRUE));
+    $html = $this->drupalGet('node/'. $nid .'/publish');
     $this->assertText(_publishcontent_get_message($node->nid, $node->title, TRUE),
                       'drupal_set_message working for publish.');
     $node = node_load($nid, NULL, TRUE);
-    $this->assertEqual($node->status, 1, 'node is now published');
-  }
-
-
-  /**
-   * HACK: taken from simpletest for Drupal 6
-   * Creates a node based on default settings.
-   *
-   * @param $settings
-   *   An associative array of settings to change from the defaults, keys are
-   *   node properties, for example 'body' => 'Hello, world!'.
-   * @return object Created node object.
-   */
-  function drupalCreateNode($settings = array()) {
-    // Populate defaults array
-    $defaults = array(
-      'body'      => $this->randomName(32),
-      'title'     => $this->randomName(8),
-      'comment'   => 2,
-      'changed'   => time(),
-      'format'    => FILTER_FORMAT_DEFAULT,
-      'moderate'  => 0,
-      'promote'   => 0,
-      'revision'  => 1,
-      'log'       => '',
-      'status'    => 1,
-      'sticky'    => 0,
-      'type'      => 'page',
-      'revisions' => NULL,
-      'taxonomy'  => NULL,
-    );
-    $defaults['teaser'] = $defaults['body'];
-    // If we already have a node, we use the original node's created time, and this
-    if (isset($defaults['created'])) {
-      $defaults['date'] = format_date($defaults['created'], 'custom', 'Y-m-d H:i:s O');
-    }
-    if (empty($settings['uid'])) {
-      global $user;
-      $defaults['uid'] = $user->uid;
-    }
-    $node = ($settings + $defaults);
-    $node = (object)$node;
-
-    node_save($node);
-
-    // small hack to link revisions to our test user
-    db_query('UPDATE {node_revisions} SET uid = %d WHERE vid = %d', $node->uid, $node->vid);
-    return $node;
+    $this->assertEqual($node->status, 1, 'node should be now published');
   }
 }

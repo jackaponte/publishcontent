@@ -9,38 +9,46 @@
 
 /**
  * Implementation of hook_menu().
- *
- * @see publishcontent_install()
  */
-function publishcontent_menu($may_cache) {
+function publishcontent_menu() {
   $items = array();
-  if (!$may_cache && arg(0) == 'node' && is_numeric(arg(1))) {
-    $node = node_load(arg(1));
-    if ($node->nid &&
-        (user_access('un/publish '. check_plain($node->type) .' content') ||
-         user_access('un/publish *all* content'))) {
-      $items[] = array('path' => 'node/'. arg(1) .'/'. ($node->status ? 'unpublish' : 'publish'),
-        'title' => t($node->status ? 'Unpublish' : 'Publish'),
-        'callback' => 'publishcontent_toggle_status',
-        'callback arguments' => array($node),
-        'access' => TRUE,
-        'weight' => 5,
-        'type' => MENU_LOCAL_TASK,
-      );
-      // force the access to the node 
-      if (!user_access('administer nodes')) {
-        $items[] = array(
-          'path' => 'node/'. arg(1),
-          'title' => t('View'),
-          'callback' => 'node_page_view',
-          'callback arguments' => array($node),
-          'access' => TRUE,
-          'type' => MENU_CALLBACK,
-        );
-      }
-    }
-  }
+  $items['node/%node/publish'] = array(
+    'title' => 'Publish',
+    'page callback' => 'publishcontent_toggle_status',
+    'page arguments' => array(1),
+    'access callback' => '_publishcontent_access',
+    'access arguments' => array(1, 'publish'),
+    'weight' => 5,
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['node/%node/unpublish'] = array(
+    'title' => 'Unpublish',
+    'page callback' => 'publishcontent_toggle_status',
+    'page arguments' => array(1),
+    'access callback' => '_publishcontent_access',
+    'access arguments' => array(1, 'unpublish'),
+    'weight' => 5,
+    'type' => MENU_LOCAL_TASK,
+  );
   return $items;
+}
+
+function publishcontent_menu_alter(&$callbacks) {
+  $callbacks['node/%node']['access callback'] = '_publishcontent_view_access';
+  $callbacks['node/%node']['access arguments'] = array(1);
+}
+
+function _publishcontent_view_access($node) {
+  return user_access('un/publish '. check_plain($node->type) .' content') ||
+         user_access('un/publish *all* content') ||
+         node_access('view', $node);
+}
+
+function _publishcontent_access($node, $op) {
+  return (($node->status == 0 && $op == 'publish') || 
+          ($node->status == 1 && $op == 'unpublish'))
+      && (user_access('un/publish '. check_plain($node->type) .' content') ||
+          user_access('un/publish *all* content'));
 }
 
 /**
@@ -70,55 +78,4 @@ function publishcontent_toggle_status($node) {
   node_save($node);
   drupal_set_message(_publishcontent_get_message($node->nid, $node->title, $node->status));
   drupal_goto('node/'. $node->nid);
-}
-
-/**
- * Implementation of hook_simpletest().
- */
-function publishcontent_simpletest() {
-  $dir = drupal_get_path('module', 'publishcontent') .'/tests';
-  $tests = file_scan_directory($dir, '\.test$');
-  return array_keys($tests);
-}
-
-
-/**
- * Implementation of hook_views_tables_alter().
- * implements a a link to un/publish for views
- */
-function publishcontent_views_tables_alter(&$tables) {
-  $tables['node']['fields']['publish'] = array(
-    'name' => t('Node: Publish link'),
-    'handler' => array(
-      'publishcontent_views_handler_node_publish_destination' => t('Return To View'),
-      'publishcontent_views_handler_node_publish' => t('Return to Node')
-    ),
-    'notafield' => TRUE,
-    'addlfields' => array('type', 'uid', 'status'),
-    'help' => t('Display a link to publish the node. Enter the text of this link into the option field; if blank the default "Publish" will be used.'),
-  );
-}
-
-/**
- * display a link to publish a node
- */
-function publishcontent_views_handler_node_publish($fieldinfo, $fielddata, $value, $data, $destination = NULL) {
-  // try to build a fake node object
-  $data->type = $data->node_type;
-  $data->uid = $data->node_uid;
-  $data->status = $data->node_status;
-
-  if (user_access('un/publish '. check_plain($data->type) .' content') ||
-      user_access('un/publish *all* content')) {
-    return l(t($data->status ? 'Unpublish' : 'Publish'),
-             "node/$data->nid/". ($data->status ? 'unpublish' : 'publish'),
-             NULL, $destination);
-  }
-}
-
-/**
- * display a link to edit a node with a destination return
- */
-function publishcontent_views_handler_node_publish_destination($fieldinfo, $fielddata, $value, $data) {
-  return publishcontent_views_handler_node_publish($fieldinfo, $fielddata, $value, $data, drupal_get_destination());
 }
