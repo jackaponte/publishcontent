@@ -156,11 +156,10 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
   }
 
 
-  function testDoPublishAndUnpublishByNodeOwner() {
+  function testDoPublishByNodeOwner() {
     $type = 'page';
-    $web_user = $this->drupalCreateUser(array('un/publish '. $type .' content'));
+    $web_user = $this->drupalCreateUser(array('publish '. $type .' content'));
     $this->drupalLogin($web_user);
-
 
     $node = $this->drupalCreateNode(
       array(
@@ -169,9 +168,23 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
         'status' => 1,
       )
     );
-
     $this->assert_current_user_can_publish_node($node);
+    $this->assert_current_user_cannot_unpublish_node($node);
+  }
 
+  function testDoUnpublishByNodeOwner() {
+    $type = 'page';
+    $web_user = $this->drupalCreateUser(array('unpublish '. $type .' content'));
+    $this->drupalLogin($web_user);
+
+    $node = $this->drupalCreateNode(
+      array(
+        'type' => $type,
+        'uid' => $web_user->uid,
+        'status' => 1,
+      )
+    );
+    $this->assert_current_user_cannot_publish_node($node);
     $this->assert_current_user_can_unpublish_node($node);
   }
 
@@ -179,10 +192,6 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
 
   function testDoPublishAndUnpublishNotByNodeOwner() {
     $type = 'page';
-    $web_user = $this->drupalCreateUser(array('un/publish '. $type .' content'));
-    $this->drupalLogin($web_user);
-
-
     $node = $this->drupalCreateNode(
       array(
         'type' => $type,
@@ -191,8 +200,25 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
       )
     );
 
+    $web_user = $this->drupalCreateUser(array('publish '. $type .' content'));
+    $this->drupalLogin($web_user);
     $this->assert_current_user_can_publish_node($node);
+    $this->assert_current_user_cannot_unpublish_node($node);
 
+
+    $web_user = $this->drupalCreateUser(array('unpublish '. $type .' content'));
+    $this->drupalLogin($web_user);
+    $this->assert_current_user_cannot_publish_node($node);
+    $this->assert_current_user_can_unpublish_node($node);
+
+    $web_user = $this->drupalCreateUser(array('publish *all* content'));
+    $this->drupalLogin($web_user);
+    $this->assert_current_user_can_publish_node($node);
+    $this->assert_current_user_cannot_unpublish_node($node);
+
+    $web_user = $this->drupalCreateUser(array('unpublish *all* content'));
+    $this->drupalLogin($web_user);
+    $this->assert_current_user_cannot_publish_node($node);
     $this->assert_current_user_can_unpublish_node($node);
   }
 }
