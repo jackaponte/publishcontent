@@ -1,16 +1,31 @@
 PUBLISH CONTENT MODULE
 
-This module adds another level to the access control of nodes with an "publish nodetype content" permission for each node type available to the system in addition to create, edit own, and edit content permissions. By enabling the "publish nodetype content" permission on a nodetype you can give a role the ability to view, edit, and publish unpublished nodes without being the node creator or having "administer nodes" permissions.
+The Publish Content module allows users to publish and unpublish nodes,
+on a per "node type" basis or for all "node types", without granting users
+the very broad "administer nodes" permission.
+
+It allows easily to create editor or moderator roles by granting them 
+either publishing or unpublishing permissions, or both.
+
+This module is also integrated with the Views module:
+you can add a publish/unpublish link on all your views, making it easy
+to create lists for reviewers, editors and publishers.
+
 
 INSTALLATION
 
 Put the module in your drupal modules directory and enable it in admin/modules.
 
-If you are upgrading, be sure to run update.php as several changes are
-required. This attempts to migrate your previous settings to the new setup in
-drupal 5. I would strongly recommend backing up your database before installing
-this module.
+Then, you just need to go to the Drupal permissions page,
+and set the various permissions:
+- "publish *all* content": you can publish any node
+- "publish 'nodetype' content": you can publish any node whose type is 'nodetype'
+- "unpublish *all* content": you can unpublish any node
+- "publish 'nodetype' content": you can publish any node whose type is 'nodetype'
 
-IMPORTANT
 
-This module does not disable or override any other permission settings. It is simply another layer of granularity. This is not a replacement for the "edit (own) nodetype content" permission. This does not give the role access to delete nodes... you still will need "administer nodes" permission to do so!
+USAGE
+
+A tab button (like Edit and View) 'Publish' or 'Unpublish' should appear on the
+node edit and view pages.
+Click on 'Publish' to publish and 'Unpublish' to unpublish, it's that simple!
