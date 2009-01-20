@@ -47,18 +47,19 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $this->assertText('Access denied' . ' | '. variable_get('site_name', 'Drupal'), $msg);
   }
 
-  /**
-   * pre-post requesite: node status must be 1 
-   */
-  function assert_current_user_can_publish_node($node) {
-    $this->assertEqual($node->status, 1);
+  function set_node_status(&$node, $status, $msg = 'unable to set correct node status') {
+    $node->status = $status;
+    node_save($node);
+    $result = node_load($node->nid, NULL, TRUE);
+    $this->assertEqual($result->status, $status, $msg);
+  }
+
+  function assert_current_user_can_publish_node(&$node) {
+    $this->assertEqual($node->status, 1, 'pre-requesite: status MUST be 1');
     $this->publishcontent_do_operation($node->nid, 'publish', 1, 'node should be still published');
     $this->assert_access_node($node, 'node MUST BE viewable');
 
-    // unpublish node
-    $node->status = 0;
-    node_save($node);
-    $this->assertEqual($node->status, 0);
+    $this->set_node_status($node, 0);
 
     $this->assert_access_node($node, 'node MUST BE viewable even if unpublished');
 
@@ -66,17 +67,11 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $this->assertText(_publishcontent_get_message($node->nid, $node->title, TRUE),
                       'drupal_set_message not working for publish.');
 
-    // publish node
-    $node->status = 1;
-    node_save($node);
-    $this->assertEqual(node_load($node->nid, NULL, TRUE), 1);
+    $this->set_node_status($node, 1, 'post-requesite: status MUST be 1');
   }
 
-  /**
-   * pre-post requesite: node status must be 1 
-   */
-  function assert_current_user_can_unpublish_node($node) {
-    $this->assertEqual($node->status, 1);
+  function assert_current_user_can_unpublish_node(&$node) {
+    $this->assertEqual($node->status, 1, 'pre-requesite: status MUST be 1');
     $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be published');
     $this->assertText(_publishcontent_get_message($node->nid, $node->title, FALSE),
                       'drupal_set_message not working for unpublish.');
@@ -86,15 +81,12 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
 
     $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be still unpublished');
 
-    // publish node
-    $node->status = 1;
-    node_save($node);
-    $this->assertEqual(node_load($node->nid, NULL, TRUE), 1);
+    $this->set_node_status($node, 1, 'post-requesite: status MUST be 1');
   }
 
   /**
    * Test the access for the owner of a node without the permission to
-   * publish or unpublish. 
+   * publish or unpublish.
    *
    * @note: node's owner can see it even if unpublished by default in Drupal
    */
@@ -114,9 +106,7 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
     $this->assert_access_node($node, 'node MUST BE still viewable by everybody if published');
 
-    // unpublish node
-    $node->status = 0;
-    node_save($node);
+    $this->set_node_status($node, 0);
 
 
     $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");
@@ -141,9 +131,7 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
     $this->assert_access_node($node, 'node MUST BE still viewable by everybody if published');
 
-    // unpublish node
-    $node->status = 0;
-    node_save($node);
+    $this->set_node_status($node, 0);
 
 
     $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
