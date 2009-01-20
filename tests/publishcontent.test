@@ -9,7 +9,8 @@
  *
  * @todo add test for un/publish *all* content
  *
- * @note: We test to ensure we are not messing up with the default Drupal acces for view node.
+ * @note: We test to ensure we are not messing up with the default Drupal access for view node
+ *        i.e. a owner of a node can view it even if unpublished.
  */
 class PublishContentWebCaseTest extends DrupalWebTestCase {
 
@@ -47,6 +48,51 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
   }
 
   /**
+   * pre-post requesite: node status must be 1 
+   */
+  function assert_current_user_can_publish_node($node) {
+    $this->assertEqual($node->status, 1);
+    $this->publishcontent_do_operation($node->nid, 'publish', 1, 'node should be still published');
+    $this->assert_access_node($node, 'node MUST BE viewable');
+
+    // unpublish node
+    $node->status = 0;
+    node_save($node);
+    $this->assertEqual($node->status, 0);
+
+    $this->assert_access_node($node, 'node MUST BE viewable even if unpublished');
+
+    $this->publishcontent_do_operation($node->nid, 'publish', 1, 'node should be now published');
+    $this->assertText(_publishcontent_get_message($node->nid, $node->title, TRUE),
+                      'drupal_set_message not working for publish.');
+
+    // publish node
+    $node->status = 1;
+    node_save($node);
+    $this->assertEqual(node_load($node->nid, NULL, TRUE), 1);
+  }
+
+  /**
+   * pre-post requesite: node status must be 1 
+   */
+  function assert_current_user_can_unpublish_node($node) {
+    $this->assertEqual($node->status, 1);
+    $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be published');
+    $this->assertText(_publishcontent_get_message($node->nid, $node->title, FALSE),
+                      'drupal_set_message not working for unpublish.');
+
+    $this->assert_access_node($node, 'node MUST BE viewable even if unpublished');
+
+
+    $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be still unpublished');
+
+    // publish node
+    $node->status = 1;
+    node_save($node);
+    $this->assertEqual(node_load($node->nid, NULL, TRUE), 1);
+  }
+
+  /**
    * Test the access for the owner of a node without the permission to
    * publish or unpublish. 
    *
@@ -64,7 +110,8 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
       )
     );
 
-    $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
+    $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");
+    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
     $this->assert_access_node($node, 'node MUST BE still viewable by everybody if published');
 
     // unpublish node
@@ -118,19 +165,9 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
       )
     );
 
-    $this->publishcontent_do_operation($node->nid, 'publish', 1, 'node should be still published');
+    $this->assert_current_user_can_publish_node($node);
 
-    $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be now unpublished');
-    $this->assertText(_publishcontent_get_message($node->nid, $node->title, FALSE),
-                      'drupal_set_message not working for unpublish.');
-
-    $this->assert_access_node($node, 'node MUST BE viewable even if unpublished');
-
-    $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be still unpublished');
-
-    $this->publishcontent_do_operation($node->nid, 'publish', 1, 'node should be now published');
-    $this->assertText(_publishcontent_get_message($node->nid, $node->title, TRUE),
-                      'drupal_set_message not working for publish.');
+    $this->assert_current_user_can_unpublish_node($node);
   }
 
 
@@ -149,18 +186,8 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
       )
     );
 
-    $this->publishcontent_do_operation($node->nid, 'publish', 1, 'node should be still published');
+    $this->assert_current_user_can_publish_node($node);
 
-    $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be now unpublished');
-    $this->assertText(_publishcontent_get_message($node->nid, $node->title, FALSE),
-                      'drupal_set_message not working for unpublish.');
-
-    $this->assert_access_node($node, 'node MUST BE viewable even if unpublished');
-
-    $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be still unpublished');
-
-    $this->publishcontent_do_operation($node->nid, 'publish', 1, 'node should be now published');
-    $this->assertText(_publishcontent_get_message($node->nid, $node->title, TRUE),
-                      'drupal_set_message not working for publish.');
+    $this->assert_current_user_can_unpublish_node($node);
   }
 }
