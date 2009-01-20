@@ -47,11 +47,44 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $this->assertText('Access denied' . ' | '. variable_get('site_name', 'Drupal'), $msg);
   }
 
+  function assert_node_status($nid, $status, $msg = 'node status mismatches') {
+    $result = node_load($nid, NULL, TRUE);
+    $this->assertEqual($result->status, $status, $msg);
+  }
+
   function set_node_status(&$node, $status, $msg = 'unable to set correct node status') {
     $node->status = $status;
     node_save($node);
-    $result = node_load($node->nid, NULL, TRUE);
-    $this->assertEqual($result->status, $status, $msg);
+    $this->assert_node_status($node->nid, $status, $msg);
+  }
+
+
+  function assert_current_user_cannot_publish_node(&$node) {
+    $this->assertEqual($node->status, 1, 'pre-requesite: status MUST be 1');
+    $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");
+    $this->assert_node_status($node->nid, 1, 'node should be still published');
+    $this->assert_access_node($node, 'node MUST BE viewable');
+
+    $this->set_node_status($node, 0);
+
+    $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");
+    $this->assert_node_status($node->nid, 0, 'node should be still unpublished');
+
+    $this->set_node_status($node, 1, 'post-requesite: status MUST be 1');
+  }
+
+  function assert_current_user_cannot_unpublish_node(&$node) {
+    $this->assertEqual($node->status, 1, 'pre-requesite: status MUST be 1');
+    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
+    $this->assert_node_status($node->nid, 1, 'node should be still published');
+    $this->assert_access_node($node, 'node MUST BE viewable');
+
+    $this->set_node_status($node, 0);
+
+    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
+    $this->assert_node_status($node->nid, 0, 'node should be still unpublished');
+
+    $this->set_node_status($node, 1, 'post-requesite: status MUST be 1');
   }
 
   function assert_current_user_can_publish_node(&$node) {
@@ -101,17 +134,8 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
         'status' => 1,
       )
     );
-
-    $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");
-    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
-    $this->assert_access_node($node, 'node MUST BE still viewable by everybody if published');
-
-    $this->set_node_status($node, 0);
-
-
-    $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");
-    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
-    $this->assert_access_node($node, 'node MUST BE viewable if unpublished');
+    $this->assert_current_user_cannot_publish_node($node);
+    $this->assert_current_user_cannot_unpublish_node($node);
   }
 
   function testNoPermissionAndNotOwner() {
@@ -127,15 +151,8 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $web_user = $this->drupalCreateUser(array('access content'));
     $this->drupalLogin($web_user);
 
-
-    $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
-    $this->assert_access_node($node, 'node MUST BE still viewable by everybody if published');
-
-    $this->set_node_status($node, 0);
-
-
-    $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");    $this->assert_access_denied("node/{$node->nid}/unpublish", "no unpublish permission --> access denied");
-    $this->assert_access_denied('node/'. $node->nid, 'node MUST BE not viewable if unpublished');
+    $this->assert_current_user_cannot_publish_node($node);
+    $this->assert_current_user_cannot_unpublish_node($node);
   }
 
 
