@@ -155,7 +155,7 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
 
   function testDoPublishByNodeOwner() {
     $type = 'page';
-    $web_user = $this->drupalCreateUser(array('publish '. $type .' content'));
+    $web_user = $this->drupalCreateUser(array('  publish '. $type .' content'));
     $this->drupalLogin($web_user);
 
     $node = $this->drupalCreateNode(
@@ -195,7 +195,7 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
       )
     );
 
-    $this->drupalLogin($this->drupalCreateUser(array('publish '. $type .' content')));
+    $this->drupalLogin($this->drupalCreateUser(array('  publish '. $type .' content')));
     $this->assert_current_user_can_publish_node($node);
     $this->assert_current_user_cannot_unpublish_node($node);
 
@@ -203,7 +203,7 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $this->assert_current_user_cannot_publish_node($node);
     $this->assert_current_user_can_unpublish_node($node);
 
-    $this->drupalLogin($this->drupalCreateUser(array('publish *all* content')));
+    $this->drupalLogin($this->drupalCreateUser(array('  publish *all* content')));
     $this->assert_current_user_can_publish_node($node);
     $this->assert_current_user_cannot_unpublish_node($node);
 
