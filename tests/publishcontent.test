@@ -58,7 +58,6 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $this->assert_node_status($node->nid, $status, $msg);
   }
 
-
   function assert_current_user_cannot_publish_node(&$node) {
     $this->assertEqual($node->status, 1, 'pre-requesite: status MUST be 1');
     $this->assert_access_denied("node/{$node->nid}/publish", "no publish permission --> access denied");
@@ -111,7 +110,6 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
 
     $this->assert_access_node($node, 'node MUST BE viewable even if unpublished');
 
-
     $this->publishcontent_do_operation($node->nid, 'unpublish', 0, 'node should be still unpublished');
 
     $this->set_node_status($node, 1, 'post-requesite: status MUST be 1');
@@ -136,25 +134,24 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     );
     $this->assert_current_user_cannot_publish_node($node);
     $this->assert_current_user_cannot_unpublish_node($node);
+
+    $this->set_node_status($node, 0);
+    $this->assert_access_node($node, 'node MUST BE viewable if unpublished');
   }
 
   function testNoPermissionAndNotOwner() {
-    $owner = $this->drupalCreateUser(array('access content'));
     $node = $this->drupalCreateNode(
       array(
         'type' => 'page',
-        'uid' => $owner->uid,
+        'uid' => 0,
         'status' => 1,
       )
     );
 
-    $web_user = $this->drupalCreateUser(array('access content'));
-    $this->drupalLogin($web_user);
-
+    $this->drupalLogin($this->drupalCreateUser(array('access content')));
     $this->assert_current_user_cannot_publish_node($node);
     $this->assert_current_user_cannot_unpublish_node($node);
   }
-
 
   function testDoPublishByNodeOwner() {
     $type = 'page';
@@ -188,8 +185,6 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
     $this->assert_current_user_can_unpublish_node($node);
   }
 
-
-
   function testDoPublishAndUnpublishNotByNodeOwner() {
     $type = 'page';
     $node = $this->drupalCreateNode(
@@ -200,24 +195,19 @@ class PublishContentWebCaseTest extends DrupalWebTestCase {
       )
     );
 
-    $web_user = $this->drupalCreateUser(array('publish '. $type .' content'));
-    $this->drupalLogin($web_user);
+    $this->drupalLogin($this->drupalCreateUser(array('publish '. $type .' content')));
     $this->assert_current_user_can_publish_node($node);
     $this->assert_current_user_cannot_unpublish_node($node);
 
-
-    $web_user = $this->drupalCreateUser(array('unpublish '. $type .' content'));
-    $this->drupalLogin($web_user);
+    $this->drupalLogin($this->drupalCreateUser(array('unpublish '. $type .' content')));
     $this->assert_current_user_cannot_publish_node($node);
     $this->assert_current_user_can_unpublish_node($node);
 
-    $web_user = $this->drupalCreateUser(array('publish *all* content'));
-    $this->drupalLogin($web_user);
+    $this->drupalLogin($this->drupalCreateUser(array('publish *all* content')));
     $this->assert_current_user_can_publish_node($node);
     $this->assert_current_user_cannot_unpublish_node($node);
 
-    $web_user = $this->drupalCreateUser(array('unpublish *all* content'));
-    $this->drupalLogin($web_user);
+    $this->drupalLogin($this->drupalCreateUser(array('unpublish *all* content')));
     $this->assert_current_user_cannot_publish_node($node);
     $this->assert_current_user_can_unpublish_node($node);
   }
