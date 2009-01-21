@@ -39,16 +39,16 @@ function publishcontent_menu_alter(&$callbacks) {
 }
 
 function _publishcontent_view_access($node) {
-  return user_access('publish *all* content') ||
+  return user_access('  publish *all* content') ||
          user_access('unpublish *all* content') ||
-         user_access('publish '. check_plain($node->type) .' content') ||
+         user_access('  publish '. check_plain($node->type) .' content') ||
          user_access('unpublish '. check_plain($node->type) .' content') ||
          node_access('view', $node);
 }
 
 function _publishcontent_publish_access($node) {
-  return !$node->status && (user_access('publish *all* content') ||
-                            user_access('publish '. check_plain($node->type) .' content'));
+  return !$node->status && (user_access('  publish *all* content') ||
+                            user_access('  publish '. check_plain($node->type) .' content'));
 }
 function _publishcontent_unpublish_access($node) {
   return $node->status && (user_access('unpublish *all* content') ||
@@ -57,16 +57,20 @@ function _publishcontent_unpublish_access($node) {
 
 /**
  * Implementation of hook_perm().
+ *
+ * @note: the 2 extra spaces is a hack: Drupal 5-6 user permissions page set
+ *        'publish *all* content' auto-magically when 'unpublish *all* content'
+ *        is set.
  */
 function publishcontent_perm() {
   $perms = array(
-    'publish *all* content',
+    '  publish *all* content',
     'unpublish *all* content',
   );
 
   foreach (node_get_types() as $type) {
     if ($type->module == 'node') {
-      $perms[] = 'publish '. check_plain($type->type) .' content';
+      $perms[] = '  publish '. check_plain($type->type) .' content';
       $perms[] = 'unpublish '. check_plain($type->type) .' content';
     }
   }
