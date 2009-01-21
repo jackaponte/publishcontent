@@ -5,9 +5,7 @@
  * @file
  * Unit tests for Publish Content module.
  * prerequesite: make sure that 'authenticated user' does not have any access like
- *               'un/publish [content type] content'
- *
- * @todo add test for un/publish *all* content
+ *               'publish [content type] content' or 'unpublish [content type] content'
  *
  * @note: We test to ensure we are not messing up with the default Drupal access for view node
  *        i.e. a owner of a node can view it even if unpublished.
