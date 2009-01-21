@@ -24,13 +24,11 @@ class publishcontent_views_handler_field_node_link extends views_handler_field {
     $node->type = $values->{$this->aliases['type']};
     $node->status = $values->{$this->aliases['status']};
 
-    if (!user_access('un/publish '. check_plain($node->type) .' content') &&
-        !user_access('un/publish *all* content')) {
-      return;
-    }
+    $options = array('query' => drupal_get_destination());
+    if ($node->status && _publishcontent_unpublish_access($node))
+      return l(t('Unpublish'), "node/$node->nid/unpublish", $options);
 
-    return l(t($node->status ? 'Unpublish' : 'Publish'),
-             "node/$node->nid/". ($node->status ? 'unpublish' : 'publish'),
-             array('query' => drupal_get_destination()));
+    if (!$node->status && _publishcontent_publish_access($node))
+      return l(t('Publish'), "node/$node->nid/publish", $options);
   }
 }
