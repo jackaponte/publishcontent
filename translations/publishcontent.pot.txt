@@ -19,12 +19,28 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: publishcontent_views_handler_field_node_link.inc:29 publishcontent.module:25
+#: publishcontent.module:25
 msgid "Unpublish"
 msgstr ""
 
-#: publishcontent_views_handler_field_node_link.inc:32 publishcontent.module:16
+#: publishcontent.module:16
 msgid "Publish"
+msgstr ""
+
+#: publishcontent_views_handler_field_node_link.inc:27
+msgid "Text to display for publishing"
+msgstr ""
+
+#: publishcontent_views_handler_field_node_link.inc:32
+msgid "Text to display for unpublishing"
+msgstr ""
+
+#: publishcontent_views_handler_field_node_link.inc:53
+msgid "unpublish"
+msgstr ""
+
+#: publishcontent_views_handler_field_node_link.inc:56
+msgid "publish"
 msgstr ""
 
 #: publishcontent.module:102

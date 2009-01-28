@@ -19,17 +19,33 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n>1);\n"
 
-#: publishcontent_views_handler_field_node_link.inc:29 publishcontent.module:25
+#: publishcontent.module:25
 msgid "Unpublish"
 msgstr "Dépublier"
 
-#: publishcontent_views_handler_field_node_link.inc:32 publishcontent.module:16
+#: publishcontent.module:16
 msgid "Publish"
 msgstr "Publier"
 
+#: publishcontent_views_handler_field_node_link.inc:27
+msgid "Text to display for publishing"
+msgstr "Texte à afficher pour publier"
+
+#: publishcontent_views_handler_field_node_link.inc:32
+msgid "Text to display for unpublishing"
+msgstr "Texte à afficher pour dépublier"
+
+#: publishcontent_views_handler_field_node_link.inc:53
+msgid "unpublish"
+msgstr "dépublier"
+
+#: publishcontent_views_handler_field_node_link.inc:56
+msgid "publish"
+msgstr "publier"
+
 #: publishcontent.module:102
 msgid "Publish link"
-msgstr "Noeud: lien pour publier"
+msgstr "Lien de publication"
 
 #: publishcontent.module:103
 msgid "Display a link to publish the node."
