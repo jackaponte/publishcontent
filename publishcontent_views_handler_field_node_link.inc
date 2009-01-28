@@ -12,6 +12,29 @@ class publishcontent_views_handler_field_node_link extends views_handler_field {
     $this->additional_fields['status'] = 'status';
   }
 
+  function option_definition() {
+    $options = parent::option_definition();
+    $options['publish'] = 
+    $options['unpublish'] = array('default' => '', 'translatable' => TRUE);
+
+    return $options;
+  }
+
+  function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+    $form['publish'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Text to display for publishing'),
+      '#default_value' => $this->options['publish'],
+    );
+    $form['unpublish'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Text to display for unpublishing'),
+      '#default_value' => $this->options['unpublish'],
+    );
+  }
+
+
   function query() {
     $this->ensure_my_table();
     $this->add_additional_fields();
@@ -25,10 +48,15 @@ class publishcontent_views_handler_field_node_link extends views_handler_field {
     $node->status = $values->{$this->aliases['status']};
 
     $options = array('query' => drupal_get_destination());
+
     if ($node->status && _publishcontent_unpublish_access($node))
-      return l(t('Unpublish'), "node/$node->nid/unpublish", $options);
+      $op = 'unpublish';
 
     if (!$node->status && _publishcontent_publish_access($node))
-      return l(t('Publish'), "node/$node->nid/publish", $options);
+      $op = 'publish';
+
+    if (isset($op))
+      return l(empty($this->options[$op]) ? t($op) : $this->options[$op],
+               "node/$node->nid/$op", $options);
   }
 }

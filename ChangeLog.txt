@@ -1,0 +1,1 @@
+#365534 by Nick_vh, malaussene: Added custom label in views.
