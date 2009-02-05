@@ -1,1 +1,4 @@
+#369652 by Eikaa: Added german translation.
+
+publishcontent-6.x-1.0 release
 #365534 by Nick_vh, malaussene: Added custom label in views.
