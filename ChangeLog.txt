@@ -1,3 +1,5 @@
+Fix CSRF
+#366034 by freakalis: Added permissions to publish/unpublish own content.
 #369652 by Eikaa: Added german translation.
 
 publishcontent-6.x-1.0 release

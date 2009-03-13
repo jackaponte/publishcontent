@@ -57,6 +57,6 @@ class publishcontent_views_handler_field_node_link extends views_handler_field {
 
     if (isset($op))
       return l(empty($this->options[$op]) ? t($op) : $this->options[$op],
-               "node/$node->nid/$op", $options);
+               "node/$node->nid/$op/". drupal_get_token(), $options);
   }
 }
