@@ -90,7 +90,7 @@ function publishcontent_perm() {
   );
 
   foreach (node_get_types() as $type) {
-    if ($type->module == 'node') {
+    if (isset($type->type)) {
       $perms[] = '  publish '. check_plain($type->type) .' content';
       $perms[] = '  publish own '. check_plain($type->type) .' content';
       $perms[] = 'unpublish '. check_plain($type->type) .' content';

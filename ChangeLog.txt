@@ -1,3 +1,4 @@
+#406190 by vr_mex, malaussene: Added permissions for node type declared modules other than the node module.
 Fix CSRF
 #366034 by freakalis: Added permissions to publish/unpublish own content.
 #369652 by Eikaa: Added german translation.
