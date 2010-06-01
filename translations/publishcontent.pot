@@ -52,11 +52,11 @@ msgid "Display a link to publish the node."
 msgstr ""
 
 #: publishcontent.module:67
-msgid "  publish *all* content"
+msgid "publish any content"
 msgstr ""
 
 #: publishcontent.module:68
-msgid "unpublish *all* content"
+msgid "unpublish any content"
 msgstr ""
 
 #: publishcontent.module:72
