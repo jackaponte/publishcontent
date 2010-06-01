@@ -150,23 +150,25 @@ function publishcontent_views_handlers() {
  * allow to use the 'Publishing options' on the edit/add page
  */
 function publishcontent_form_alter(&$form, $form_state, $form_id) {
-  if (!user_access('administer nodes')
-    && $form['type']['#value'] .'_node_form' == $form_id
-    && (_publishcontent_unpublish_access($form['#node'])
-      || _publishcontent_publish_access($form['#node']))) {
-    $form['options']['status']['#access'] = TRUE;
-    if ($form['options']['#access']) {
-      return;
-    }
-    else {
-      $form['options']['#access'] = TRUE;
-    }
-    foreach (element_children($form['options']) as $key) {
-      // If another form has afforded access to a particular option, do not
-      // override that access. Otherwise, disable it.
-      $form['options'][$key]['#access'] =
-       isset($form['options'][$key]['#access'])
-       ? $form['options'][$key]['#access'] : FALSE;
-    }
+  if (user_access('administer nodes')
+  || empty($form['type']['#value']) || empty($form['#node'])
+  || $form['type']['#value'] . '_node_form' != $form_id
+  || (!_publishcontent_unpublish_access($form['#node'])
+      && !_publishcontent_publish_access($form['#node']))) {
+     return;
+  }
+  $form['options']['status']['#access'] = TRUE;
+  if (!empty($form['options']['#access'])) {
+    return;
+  }
+  else {
+    $form['options']['#access'] = TRUE;
+  }
+  foreach (element_children($form['options']) as $key) {
+    // If another form has afforded access to a particular option, do not
+    // override that access. Otherwise, disable it.
+    $form['options'][$key]['#access'] =
+     isset($form['options'][$key]['#access'])
+     ? $form['options'][$key]['#access'] : FALSE;
   }
 }
