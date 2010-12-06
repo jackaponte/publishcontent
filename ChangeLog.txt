@@ -1,3 +1,10 @@
+publishcontent-7.x-1.0-beta3 release
+#873466 by martinquested: add additional "editable" publish/unpublish permission to support node access modules
+#454660 - respect publishing options
+- Updating views support
+- Add option to enable or disable specific node-types
+- Publish/unpublish menu local task returns to referer, instead of node/$nid
+
 publishcontent-6.x-1.1 release
 #443762 by maryts23, Taz and malaussene: Publish link doesn't appear in Views
         when using publish own content permissions.

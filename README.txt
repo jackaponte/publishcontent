@@ -18,9 +18,9 @@ Put the module in your drupal modules directory and enable it in admin/modules.
 
 Then, you just need to go to the Drupal permissions page,
 and set the various permissions:
-- "publish *all* content": you can publish any node
+- "publish all content": you can publish any node
 - "publish 'nodetype' content": you can publish any node whose type is 'nodetype'
-- "unpublish *all* content": you can unpublish any node
+- "unpublish all content": you can unpublish any node
 - "publish 'nodetype' content": you can publish any node whose type is 'nodetype'
 
 

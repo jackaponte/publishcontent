@@ -1,6 +1,7 @@
 <?php
+// $Id$
 
-function publishcontent_update_1() {
+function publishcontent_update_6001() {
   $ret = $node_types = array();
   $query = 'SELECT pid, perm FROM {permission}';
   $result = db_query($query);
@@ -15,10 +16,9 @@ function publishcontent_update_1() {
       $replacements[] = 'publish any ' . check_plain($type->type) . ' content';
       $replacements[] = 'unpublish any '. check_plain($type->type) . ' content';
     }
-    dpm($old_perm);
     $new_perm = str_replace($subjects, $replacements, $row['perm']);
-    dpm($new_perm);
     $ret[] = array('success' => db_query($update_sql, $new_perm, $row['pid']), 'query' => t('Updated permission set @set', array('@set' => $row['pid'])));
   }
+  variable_set('menu_rebuild_needed', TRUE);
   return $ret;
 }
