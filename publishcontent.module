@@ -19,6 +19,7 @@ function publishcontent_menu() {
     'access arguments' => array(1, 3),
     'weight' => 5,
     'type' => MENU_LOCAL_TASK,
+    'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-publish'))),
   );
   $items['node/%node/unpublish/%publishcontent_security_token'] = array(
     'title' => 'Unpublish',
@@ -28,6 +29,7 @@ function publishcontent_menu() {
     'access arguments' => array(1, 3),
     'weight' => 5,
     'type' => MENU_LOCAL_TASK,
+    'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-unpublish'))),
   );
   return $items;
 }

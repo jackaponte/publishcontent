@@ -50,14 +50,18 @@ class publishcontent_views_handler_field_node_link extends views_handler_field {
 
     $options = array('query' => drupal_get_destination());
 
-    if ($node->status && _publishcontent_unpublish_access($node))
+    if ($node->status && _publishcontent_unpublish_access($node)) {
       $op = 'unpublish';
+    }
 
-    if (!$node->status && _publishcontent_publish_access($node))
+    if (!$node->status && _publishcontent_publish_access($node)) {
       $op = 'publish';
+    }
 
-    if (isset($op))
+    $options['attributes'] = array('class' => array('publishcontent-link', 'publishcontent-' . $op));
+    if (isset($op)) {
       return l(empty($this->options[$op]) ? t($op) : $this->options[$op],
                "node/$node->nid/$op/". drupal_get_token(), $options);
+    }
   }
 }
