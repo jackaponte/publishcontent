@@ -30,6 +30,7 @@ function publishcontent_menu() {
     'weight' => 5,
     'type' => MENU_LOCAL_TASK,
     'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-unpublish'))),
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
   );
   return $items;
 }
