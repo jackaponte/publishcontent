@@ -1,3 +1,5 @@
+#1244136 by gionnibgud - fixed PHP Notice in views handler
+
 publishcontent-7.x-1.0-beta3 release
 #873466 by martinquested: add additional "editable" publish/unpublish permission to support node access modules
 #454660 - respect publishing options
