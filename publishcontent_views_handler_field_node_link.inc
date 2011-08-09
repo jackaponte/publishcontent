@@ -58,8 +58,8 @@ class publishcontent_views_handler_field_node_link extends views_handler_field {
       $op = 'publish';
     }
 
-    $options['attributes'] = array('class' => array('publishcontent-link', 'publishcontent-' . $op));
     if (isset($op)) {
+      $options['attributes'] = array('class' => array('publishcontent-link', 'publishcontent-' . $op));
       return l(empty($this->options[$op]) ? t($op) : $this->options[$op],
                "node/$node->nid/$op/". drupal_get_token(), $options);
     }
