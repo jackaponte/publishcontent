@@ -1,4 +1,9 @@
+publishcontent-7.x-1.0 release
 #1244136 by gionnibgud - fixed PHP Notice in views handler
+#1204540, #1267484 - fixed typo in permission hook
+#1131818 by Simon Georges - add a class to pub/unpub links
+#1131526 by Simon Georges - add unpub link to contextual hooks
+
 
 publishcontent-7.x-1.0-beta3 release
 #873466 by martinquested: add additional "editable" publish/unpublish permission to support node access modules
