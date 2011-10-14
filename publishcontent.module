@@ -166,9 +166,9 @@ function publishcontent_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'node_type_form') {
     $form['workflow']['publishcontent'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Enable publishcontent permissions for this node type.'),
+      '#title' => t('Enable publishcontent'),
       '#default_value' => variable_get('publishcontent_' . $form['#node_type']->type, TRUE),
-      '#description' => t('Unchecking this option will disable publish and unpublish links for this node type.'),
+      '#description' => t('Display publish or unpublish link for nodes of this type.'),
     );
   }
   elseif (user_access('administer nodes')
