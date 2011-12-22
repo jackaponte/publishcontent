@@ -51,7 +51,7 @@ function publishcontent_security_token_to_arg($arg, $map, $index) {
  */
 function _publishcontent_publish_access($node, $token = FALSE) {
   if (empty($node->nid) || !is_object($node)) {
-    return;
+    return FALSE;
   }
   if ($token && !drupal_valid_token($token)) {
     return FALSE;
@@ -76,7 +76,7 @@ function _publishcontent_publish_access($node, $token = FALSE) {
  */
 function _publishcontent_unpublish_access($node, $token = FALSE) {
   if (empty($node->nid) || !is_object($node)) {
-    return;
+    return FALSE;
   }
   if ($token && !drupal_valid_token($token)) {
     return FALSE;
