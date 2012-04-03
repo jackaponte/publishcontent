@@ -56,6 +56,9 @@ function _publishcontent_publish_access($node, $token = FALSE) {
   if (!variable_get('publishcontent_' . $node->type, TRUE)) {
     return FALSE;
   }
+  if (!is_object($node)) {
+    return FALSE;
+  }
 
   global $user;
   return !$node->status && 
@@ -77,6 +80,9 @@ function _publishcontent_unpublish_access($node, $token = FALSE) {
     return FALSE;
   }
   if (!variable_get('publishcontent_' . $node->type, TRUE)) {
+    return FALSE;
+  }
+  if (!is_object($node)) {
     return FALSE;
   }
 
