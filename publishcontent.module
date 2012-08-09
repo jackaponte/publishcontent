@@ -11,7 +11,17 @@
  */
 function publishcontent_menu() {
   $items = array();
-  $items['node/%node/publish/%publishcontent_security_token'] = array(
+  $items['admin/config/content/publishcontent'] = array(
+    'title' => 'Publish content settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('publishcontent_config_form'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer site configuration'),
+    'description' => 'Configure settings.',
+    'file' => 'includes/publishcontent.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['node/%publishcontent_tab/publish/%publishcontent_security_token'] = array(
     'title' => 'Publish',
     'page callback' => 'publishcontent_toggle_status',
     'page arguments' => array(1),
@@ -22,7 +32,7 @@ function publishcontent_menu() {
     'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-publish'))),
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
   );
-  $items['node/%node/unpublish/%publishcontent_security_token'] = array(
+  $items['node/%publishcontent_tab/unpublish/%publishcontent_security_token'] = array(
     'title' => 'Unpublish',
     'page callback' => 'publishcontent_toggle_status',
     'page arguments' => array(1),
@@ -34,6 +44,19 @@ function publishcontent_menu() {
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
   );
   return $items;
+}
+
+/**
+ * Decide to show the (un)publish tab or not.
+ */
+function publishcontent_tab_load($nid) {
+  if (is_numeric($nid)) {
+    $node = node_load($nid);
+    if (variable_get('publishcontent_tabs', TRUE)) {
+      return $node;
+    }
+  }
+  return FALSE;
 }
 
 /**
