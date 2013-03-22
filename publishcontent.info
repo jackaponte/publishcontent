@@ -1,7 +1,6 @@
 name = Publish Content
 description = "Adds a 'Publish' or 'Unpublish' link on the node edit/view pages,<br />and a field 'Publish Link' if the Views module is enabled."
 core = 7.x
+configure = admin/config/content/publishcontent
 
-files[] = publishcontent.module
-files[] = publishcontent.install
 files[] = publishcontent_views_handler_field_node_link.inc
