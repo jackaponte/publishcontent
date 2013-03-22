@@ -22,6 +22,8 @@ and set the various permissions:
 - "publish 'nodetype' content": you can publish any node whose type is 'nodetype'
 - "unpublish all content": you can unpublish any node
 - "publish 'nodetype' content": you can publish any node whose type is 'nodetype'
+- "un/publish editable content": publish or unpublish nodes where the user has
+    full edit permissions of the node concerned (note: check text formats access)
 
 
 USAGE
