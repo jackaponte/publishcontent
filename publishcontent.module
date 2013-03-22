@@ -89,7 +89,8 @@ function _publishcontent_publish_access($node, $token = FALSE) {
 
   global $user;
   return !$node->status && 
-    (user_access('publish any content') 
+    (user_access('administer nodes')
+    || user_access('publish any content')
     || (user_access('publish own content') && $user->uid == $node->uid) 
     || (user_access('publish editable content') && node_access('update', $node))
     || (user_access('publish own '. check_plain($node->type) .' content', $user) && $user->uid == $node->uid) 
@@ -118,7 +119,8 @@ function _publishcontent_unpublish_access($node, $token = FALSE) {
 
   global $user;
   return $node->status && 
-    (user_access('unpublish any content') 
+    (user_access('administer nodes')
+    || user_access('unpublish any content')
     || (user_access('unpublish own content') && $user->uid == $node->uid) 
     || (user_access('unpublish editable content') && node_access('update', $node)) 
     || (user_access('unpublish own '. check_plain($node->type) .' content', $user) && $user->uid == $node->uid) 
