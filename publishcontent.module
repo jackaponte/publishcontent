@@ -74,16 +74,13 @@ function publishcontent_security_token_to_arg($arg, $map, $index) {
  * and current node status = unpublished
  */
 function _publishcontent_publish_access($node, $token = FALSE) {
-  if (empty($node->nid) || !is_object($node)) {
+  if (!is_object($node)) {
     return FALSE;
   }
   if ($token && !drupal_valid_token($token)) {
     return FALSE;
   }
   if (!variable_get('publishcontent_' . $node->type, TRUE)) {
-    return FALSE;
-  }
-  if (!is_object($node)) {
     return FALSE;
   }
 
@@ -104,16 +101,13 @@ function _publishcontent_publish_access($node, $token = FALSE) {
  * and current node status = published
  */
 function _publishcontent_unpublish_access($node, $token = FALSE) {
-  if (empty($node->nid) || !is_object($node)) {
+  if (!is_object($node)) {
     return FALSE;
   }
   if ($token && !drupal_valid_token($token)) {
     return FALSE;
   }
   if (!variable_get('publishcontent_' . $node->type, TRUE)) {
-    return FALSE;
-  }
-  if (!is_object($node)) {
     return FALSE;
   }
 
