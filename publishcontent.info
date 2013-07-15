@@ -4,3 +4,4 @@ core = 7.x
 configure = admin/config/content/publishcontent
 
 files[] = publishcontent_views_handler_field_node_link.inc
+files[] = tests/publishcontent.test
