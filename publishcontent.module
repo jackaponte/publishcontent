@@ -6,11 +6,19 @@
  * node type
  */
 
+define('PUBLISHCONTENT_METHOD_NONE', 0);
+define('PUBLISHCONTENT_METHOD_ACTION_LINKS', 1);
+define('PUBLISHCONTENT_METHOD_BUTTON', 2);
+define('PUBLISHCONTENT_METHOD_TABS', 3);
+
 /**
  * Implements hook_menu().
  */
 function publishcontent_menu() {
   $items = array();
+
+  $method = _publishcontent_get_method();
+
   $items['admin/config/content/publishcontent'] = array(
     'title' => 'Publish content settings',
     'page callback' => 'drupal_get_form',
@@ -21,28 +29,37 @@ function publishcontent_menu() {
     'file' => 'publishcontent.admin.inc',
     'type' => MENU_NORMAL_ITEM,
   );
-  $items['node/%publishcontent_tab/publish/%publishcontent_security_token'] = array(
-    'title' => 'Publish',
-    'page callback' => 'publishcontent_toggle_status',
-    'page arguments' => array(1),
-    'access callback' => '_publishcontent_publish_access',
-    'access arguments' => array(1, 3),
-    'weight' => 5,
-    'type' => MENU_LOCAL_TASK,
-    'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-publish'))),
-    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-  );
-  $items['node/%publishcontent_tab/unpublish/%publishcontent_security_token'] = array(
-    'title' => 'Unpublish',
-    'page callback' => 'publishcontent_toggle_status',
-    'page arguments' => array(1),
-    'access callback' => '_publishcontent_unpublish_access',
-    'access arguments' => array(1, 3),
-    'weight' => 5,
-    'type' => MENU_LOCAL_TASK,
-    'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-unpublish'))),
-    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-  );
+
+  if (in_array($method, array(PUBLISHCONTENT_METHOD_ACTION_LINKS, PUBLISHCONTENT_METHOD_TABS))) {
+
+    $menu_type = ($method == PUBLISHCONTENT_METHOD_TABS) ? MENU_LOCAL_ACTION : MENU_LOCAL_TASK;
+
+    $items['node/%publishcontent_tab/publish/%publishcontent_security_token'] = array(
+      'title' => 'Publish',
+      'page callback' => 'publishcontent_toggle_status',
+      'page arguments' => array(1),
+      'access callback' => '_publishcontent_publish_access',
+      'access arguments' => array(1, 3),
+      'weight' => 5,
+      'type' => $menu_type,
+      'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-publish'))),
+      'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    );
+
+    $items['node/%publishcontent_tab/unpublish/%publishcontent_security_token'] = array(
+      'title' => 'Unpublish',
+      'page callback' => 'publishcontent_toggle_status',
+      'page arguments' => array(1),
+      'access callback' => '_publishcontent_unpublish_access',
+      'access arguments' => array(1, 3),
+      'weight' => 5,
+      'type' => $menu_type,
+      'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-unpublish'))),
+      'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    );
+
+  }
+
   return $items;
 }
 
@@ -52,7 +69,7 @@ function publishcontent_menu() {
 function publishcontent_tab_load($nid) {
   if (is_numeric($nid)) {
     $node = node_load($nid);
-    if (variable_get('publishcontent_tabs', TRUE)) {
+    if (variable_get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS) == PUBLISHCONTENT_METHOD_TABS) {
       return $node;
     }
   }
@@ -70,7 +87,7 @@ function publishcontent_security_token_to_arg($arg, $map, $index) {
 }
 
 /**
- * Access callback for publish action. Only allow access based on permissions 
+ * Access callback for publish action. Only allow access based on permissions
  * and current node status = unpublished
  */
 function _publishcontent_publish_access($node, $token = FALSE) {
@@ -85,14 +102,14 @@ function _publishcontent_publish_access($node, $token = FALSE) {
   }
 
   global $user;
-  return !$node->status && 
+  return !$node->status &&
     (user_access('administer nodes')
     || user_access('publish any content')
-    || (user_access('publish own content') && $user->uid == $node->uid) 
+    || (user_access('publish own content') && $user->uid == $node->uid)
     || (user_access('publish editable content') && node_access('update', $node))
-    || (user_access('publish own '. check_plain($node->type) .' content', $user) && $user->uid == $node->uid) 
-    || user_access('publish any '. check_plain($node->type) .' content') 
-    || (user_access('publish editable '. check_plain($node->type) .' content') && node_access('update', $node))
+    || (user_access('publish own ' . check_plain($node->type) . ' content', $user) && $user->uid == $node->uid)
+    || user_access('publish any ' . check_plain($node->type) . ' content')
+    || (user_access('publish editable ' . check_plain($node->type) . ' content') && node_access('update', $node))
   );
 }
 
@@ -112,19 +129,19 @@ function _publishcontent_unpublish_access($node, $token = FALSE) {
   }
 
   global $user;
-  return $node->status && 
+  return $node->status &&
     (user_access('administer nodes')
     || user_access('unpublish any content')
-    || (user_access('unpublish own content') && $user->uid == $node->uid) 
-    || (user_access('unpublish editable content') && node_access('update', $node)) 
-    || (user_access('unpublish own '. check_plain($node->type) .' content', $user) && $user->uid == $node->uid) 
-    || user_access('unpublish any '. check_plain($node->type) .' content') 
-    || (user_access('unpublish editable '. check_plain($node->type) .' content') && node_access('update', $node))
+    || (user_access('unpublish own content') && $user->uid == $node->uid)
+    || (user_access('unpublish editable content') && node_access('update', $node))
+    || (user_access('unpublish own ' . check_plain($node->type) . ' content', $user) && $user->uid == $node->uid)
+    || user_access('unpublish any ' . check_plain($node->type) . ' content')
+    || (user_access('unpublish editable ' . check_plain($node->type) . ' content') && node_access('update', $node))
   );
 }
 
 /**
- * Implementation of hook_permission().
+ * Implements hook_permission().
  */
 function publishcontent_permission() {
   $perms = array(
@@ -175,7 +192,9 @@ function _publishcontent_get_message($nid, $title, $status) {
 
 /**
  * Menu callback for publish / unpublish content actions.
- * @param $node a node object
+ *
+ * @param node $node
+ *   A node object.
  */
 function publishcontent_toggle_status($node) {
   // XOR the current status with 1 to get the opposite value.
@@ -192,26 +211,76 @@ function publishcontent_toggle_status($node) {
 }
 
 /**
- * Implementation of hook_form_alter()
+ * Implements hook_form_FORM_ID_alter().
  *
- * allow to use the 'Publishing options' on the edit/add page
+ * Allow to use the 'Publishing options' on the edit/add page.
  */
-function publishcontent_form_alter(&$form, &$form_state, $form_id) {
-  if ($form_id == 'node_type_form') {
+function publishcontent_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     $form['workflow']['publishcontent'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable publishcontent'),
       '#default_value' => variable_get('publishcontent_' . $form['#node_type']->type, TRUE),
       '#description' => t('Display publish or unpublish link for nodes of this type.'),
     );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Alter the node edit forms.
+ */
+function publishcontent_form_node_form_alter(&$form, &$form_state) {
+  if ($form['#form_id'] == 'node_delete_confirm') {
+    return;
   }
-  elseif (user_access('administer nodes')
-  || empty($form['#node']) || empty($form['#node']->type)
-  || $form['#node']->type . '_node_form' != $form_id
-  || (!_publishcontent_unpublish_access($form['#node'])
-      && !_publishcontent_publish_access($form['#node']))) {
-     return;
+
+  $node = $form['#node'];
+
+  if (!variable_get('publishcontent_' . $node->type, TRUE)) {
+    // Publish content is disabled for this content type.
+    return;
   }
+
+  if (empty($node->status) && !_publishcontent_publish_access($node)) {
+    // Publish content is unavailable for user without publish access.
+    return;
+  }
+
+  if (!empty($node->status) && !_publishcontent_unpublish_access($node)) {
+    // Publish content is unavailable for user without unpublish access.
+    return;
+  }
+
+  if (_publishcontent_get_method() == PUBLISHCONTENT_METHOD_BUTTON) {
+    _publishcontent_configure_publish_button($form, $form_state);
+  }
+  else {
+    _publishcontent_configure_publish_checkbox($form, $form_state);
+  }
+}
+
+/**
+ * Add the publish button to the node edit form.
+ */
+function _publishcontent_configure_publish_button(&$form, &$form_state) {
+  $node = $form['#node'];
+
+  if (empty($node->nid) || empty($form['actions'])) {
+    // Don't include the publish button on node add forms.
+    return;
+  }
+
+  // Add either the publish or unpublish buttons.
+  $form['actions']['publish']
+    = empty($node->status)
+    ? publishcontent_render_publish_button()
+    : publishcontent_render_unpublish_button();
+}
+
+/**
+ * Configure the node form to include the publish checkbox.
+ */
+function _publishcontent_configure_publish_checkbox(&$form, &$form_state) {
   $form['options']['status']['#access'] = TRUE;
   if (!empty($form['options']['#access'])) {
     return;
@@ -222,25 +291,71 @@ function publishcontent_form_alter(&$form, &$form_state, $form_id) {
   foreach (element_children($form['options']) as $key) {
     // If another form has afforded access to a particular option, do not
     // override that access. Otherwise, disable it.
-    $form['options'][$key]['#access'] =
-     isset($form['options'][$key]['#access'])
-     ? $form['options'][$key]['#access'] : FALSE;
+    $form['options'][$key]['#access']
+      = isset($form['options'][$key]['#access'])
+      ? $form['options'][$key]['#access'] : FALSE;
   }
 }
 
 /**
- * Implements hook_views_api()
+ * Render publish button.
+ */
+function publishcontent_render_publish_button() {
+  return array(
+    '#type' => 'submit',
+    '#access' => TRUE,
+    '#value' => t('Publish'),
+    '#weight' => '30',
+    '#submit' => array('_publishcontent_publish_node'),
+  );
+}
+
+/**
+ * Render unpublish button.
+ */
+function publishcontent_render_unpublish_button() {
+  return array(
+    '#type' => 'submit',
+    '#access' => TRUE,
+    '#value' => t('Unpublish'),
+    '#weight' => '30',
+    '#submit' => array('_publishcontent_unpublish_node'),
+  );
+}
+
+/**
+ * Submit handler to publish the node.
+ */
+function _publishcontent_publish_node($form, &$form_state) {
+  // Set the node status as published. And that's it.
+  $form_state['values']['status'] = 1;
+  // Use the standard submit function. Do not go custom on me boy.
+  node_form_submit($form, $form_state);
+}
+
+/**
+ * Submit handler to unpublish the node.
+ */
+function _publishcontent_unpublish_node($form, &$form_state) {
+  // Set the status as unpublished. And there is no more to that.
+  $form_state['values']['status'] = 0;
+  // Use the standard submit function.
+  node_form_submit($form, $form_state);
+}
+
+/**
+ * Implements hook_views_api().
  */
 function publishcontent_views_api() {
   return array('api' => 3);
 }
 
 /**
- * Implements hook_views_data_alter() to add items to the node table that are
- * relevant to publishcontent.
+ * Implements hook_views_data_alter().
+ *
+ * Add items to the node table that are relevant to publishcontent.
  */
 function publishcontent_views_data_alter(&$data) {
-  // new comments
   $data['node']['publishcontent'] = array(
     'title' => t('Publish link'),
     'help' => t('Display a link to publish the node.'),
@@ -248,4 +363,11 @@ function publishcontent_views_data_alter(&$data) {
       'handler' => 'publishcontent_views_handler_field_node_link',
     ),
   );
+}
+
+/**
+ * Get the configured publish content method.
+ */
+function _publishcontent_get_method() {
+  return variable_get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS);
 }

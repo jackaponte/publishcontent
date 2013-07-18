@@ -9,25 +9,7 @@
  * We test to ensure we are not messing up with the default Drupal
  * access for view node  i.e. a owner of a node can view it even if unpublished.
  */
-class PublishContentWebTestCase extends DrupalWebTestCase {
-
-  /**
-   * Drupal SimpleTest method: return metadata about the test.
-   */
-  public static function getInfo() {
-    return array(
-      'name'  => t('Publish Content: access control'),
-      'description'  => t('Executes test suite for Publish Content module.'),
-      'group' => t('Publish Content'),
-    );
-  }
-
-  /**
-   * Test setup instructions.
-   */
-  public function setUp() {
-    parent::setUp('publishcontent');
-  }
+abstract class PublishContentWebTestBase extends DrupalWebTestCase {
 
   /**
    * Perform a GET operation on a node.
@@ -48,38 +30,7 @@ class PublishContentWebTestCase extends DrupalWebTestCase {
    * @param string $msg
    *   (optional) An assertion log message.
    */
-  public function assertNodeOperationAccess($nid, $op, $expected_response, $msg = '') {
-    if (in_array($op, array('publish', 'unpublish'))) {
-      $tab_link_text = ucfirst($op);
-
-      // Visit the edit page first to generate the tab.
-      $this->drupalGet("node/{$nid}");
-      $view_response = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
-      if ($view_response != 200) {
-        $msg .= t('Could not view the node. Response code: @response', array('@response' => $view_response));
-        $this->assert($expected_response == $view_response, $msg);
-        return;
-      }
-
-      // Check the tab exists.
-      $links = $this->xpath('//a[normalize-space(text())=:label]', array(':label' => $tab_link_text));
-      if (!isset($links[0])) {
-        // No tab.
-        $msg .= t('Could not find a tab called @tab', array('@tab' => $tab_link_text));
-        $this->assert($expected_response != 200, $msg);
-        return;
-      }
-
-      // Now visit the tab.
-      $this->clickLink($tab_link_text);
-    }
-    else {
-      $url = $op == 'view' ? "node/{$nid}" : "node/$nid/$op";
-      $this->drupalGet($url);
-    }
-
-    $this->assertResponse($expected_response, $msg);
-  }
+  abstract function assertNodeOperationAccess($nid, $op, $expected_response, $msg = '');
 
   /**
    * Assert the status of a given node.
@@ -165,8 +116,6 @@ class PublishContentWebTestCase extends DrupalWebTestCase {
     $this->assertNodeOperationAccess($node->nid, 'view', 200, $username . ' can view unpublished node');
     $this->assertNodeOperationAccess($node->nid, 'publish', 200, $username . ' can access publish callback on an unpublished node');
     $this->assertNodeStatus($node->nid, 1, 'node should now be published');
-    $this->assertText(_publishcontent_get_message($node->nid, $node->title, TRUE),
-                      'Publish content message is visible.');
     $this->setNodeStatus($node, $status, 'Reset the nodes status');
   }
 
@@ -182,8 +131,6 @@ class PublishContentWebTestCase extends DrupalWebTestCase {
     $this->setNodeStatus($node, 1, 'Start test with a published node');
     $this->assertNodeOperationAccess($node->nid, 'unpublish', 200, $username . ' can access unpublish callback on a published node');
     $this->assertNodeStatus($node->nid, 0, 'Node should now be unpublished');
-    $this->assertText(_publishcontent_get_message($node->nid, $node->title, FALSE),
-                      'Unpublish message is visible.');
     $this->assertNodeOperationAccess($node->nid, 'view', 200, $username . ' can view the unpublished node.');
     $this->assertNodeOperationAccess($node->nid, 'unpublish', 403, $username . ' cannot access the unpublish callback of an unpublished node');
     $this->assertNodeStatus($node->nid, 0, 'Node should still be unpublished');
@@ -356,5 +303,252 @@ class PublishContentWebTestCase extends DrupalWebTestCase {
     $this->drupalLogin($web_user_3);
     $this->assertCurrentUserCanPublish($node3);
     $this->assertCurrentUserCanUnpublish($node3);
+  }
+
+}
+
+/**
+ * Test permissions with the tab method.
+ */
+class PublishContentTabTests extends PublishContentWebTestBase {
+
+  /**
+   * Drupal SimpleTest method: return metadata about the test.
+   */
+  public static function getInfo() {
+    return array(
+      'name'  => t('Publish Content: Tab Tests'),
+      'description'  => t('Executes test suite for Publish Content module with the tab method.'),
+      'group' => t('Publish Content'),
+    );
+  }
+
+  /**
+   * Test setup instructions.
+   */
+  public function setUp() {
+    parent::setUp('publishcontent');
+    variable_set('publishcontent_method', PUBLISHCONTENT_METHOD_TABS);
+  }
+
+  /**
+   * Perform a GET operation on a node.
+   *
+   * This will check the response to access some operation via
+   * the URL of a node. In the case of 'publish' or 'unpublish'
+   * it will first visit the view of a node so that the relevant
+   * tabs can be generated.
+   *
+   * @param int $nid
+   *   The node nid
+   * @param string $op
+   *   An operation such as 'view', 'edit', 'publish', 'unpublish'
+   * @param int $expected_response
+   *   The expexted response code. If the user should not be able to
+   *   see the 'publish' or 'unpublish' tabs, set this to 403, otherwise
+   *   200.
+   * @param string $msg
+   *   (optional) An assertion log message.
+   */
+  public function assertNodeOperationAccess($nid, $op, $expected_response, $msg = '') {
+    if (in_array($op, array('publish', 'unpublish'))) {
+      $tab_link_text = ucfirst($op);
+
+      // Visit the edit page first to generate the tab.
+      $this->drupalGet("node/{$nid}");
+      $view_response = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
+      if ($view_response != 200) {
+        $msg .= t('Could not view the node. Response code: @response', array('@response' => $view_response));
+        $this->assert($expected_response == $view_response, $msg);
+        return;
+      }
+
+      // Check the tab exists.
+      $links = $this->xpath('//a[normalize-space(text())=:label]', array(':label' => $tab_link_text));
+      if (!isset($links[0])) {
+        // No tab.
+        $msg .= t('Could not find a tab called @tab', array('@tab' => $tab_link_text));
+        $this->assert($expected_response != 200, $msg);
+        return;
+      }
+
+      // Now visit the tab.
+      $this->clickLink($tab_link_text);
+
+      $node = node_load($nid);
+
+      if ($op == 'publish') {
+        $this->assertText(_publishcontent_get_message($node->nid, $node->title, TRUE),
+          'Publish content message is visible.');
+      }
+      else {
+        $this->assertText(_publishcontent_get_message($node->nid, $node->title, FALSE),
+          'Unpublish message is visible.');
+      }
+    }
+    else {
+      $url = $op == 'view' ? "node/{$nid}" : "node/$nid/$op";
+      $this->drupalGet($url);
+    }
+
+    $this->assertResponse($expected_response, $msg);
+  }
+}
+
+/**
+ * Test permissions with the button method.
+ */
+class PublishContentButtonTests extends PublishContentWebTestBase {
+
+  /**
+   * Drupal SimpleTest method: return metadata about the test.
+   */
+  public static function getInfo() {
+    return array(
+      'name'  => t('Publish Content: Button Tests'),
+      'description'  => t('Executes test suite for Publish Content module with the button method.'),
+      'group' => t('Publish Content'),
+    );
+  }
+
+  /**
+   * Test setup instructions.
+   */
+  public function setUp() {
+    parent::setUp('publishcontent');
+    variable_set('publishcontent_method', PUBLISHCONTENT_METHOD_BUTTON);
+  }
+
+  /**
+   * Perform a GET operation on a node.
+   *
+   * This will check the response to access some operation via
+   * the URL of a node. In the case of 'publish' or 'unpublish'
+   * it will first visit the view of a node so that the relevant
+   * tabs can be generated.
+   *
+   * @param int $nid
+   *   The node nid
+   * @param string $op
+   *   An operation such as 'view', 'edit', 'publish', 'unpublish'
+   * @param int $expected_response
+   *   The expexted response code. If the user should not be able to
+   *   see the 'publish' or 'unpublish' tabs, set this to 403, otherwise
+   *   200.
+   * @param string $msg
+   *   (optional) An assertion log message.
+   */
+  public function assertNodeOperationAccess($nid, $op, $expected_response, $msg = '') {
+    if (in_array($op, array('publish', 'unpublish'))) {
+      $button_text = t(ucfirst($op));
+
+      // Visit the edit page first to generate the tab.
+      $this->drupalGet("node/{$nid}/edit");
+      $view_response = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
+      if ($view_response != 200) {
+        $msg .= t('Could not view the node. Response code: @response', array('@response' => $view_response));
+        $this->assert($expected_response == $view_response, $msg);
+        return;
+      }
+
+      // Find the button.
+      $buttons = $this->xpath('//input[@value=:label]', array(':label' => $button_text));
+      if (!isset($buttons[0])) {
+        // No button.
+        $msg .= t('Could not find a button called @button', array('@button' => $button_text));
+        $this->assert($expected_response != 200, $msg);
+        return;
+      }
+
+      // Submit the form.
+      $this->drupalPost("node/{$nid}/edit", array(), $button_text);
+    }
+    else {
+      $url = $op == 'view' ? "node/{$nid}" : "node/$nid/$op";
+      $this->drupalGet($url);
+    }
+
+    $this->assertResponse($expected_response, $msg);
+  }
+}
+
+/**
+ * Test permissions with the tab method.
+ */
+class PublishContentCheckboxTests extends PublishContentWebTestBase {
+
+  /**
+   * Drupal SimpleTest method: return metadata about the test.
+   */
+  public static function getInfo() {
+    return array(
+      'name'  => t('Publish Content: Checkbox Tests'),
+      'description'  => t('Executes test suite for Publish Content module with the checkbox method.'),
+      'group' => t('Publish Content'),
+    );
+  }
+
+  /**
+   * Test setup instructions.
+   */
+  public function setUp() {
+    parent::setUp('publishcontent');
+    variable_set('publishcontent_method', PUBLISHCONTENT_METHOD_NONE);
+  }
+
+  /**
+   * Perform a GET operation on a node.
+   *
+   * This will check the response to access some operation via
+   * the URL of a node. In the case of 'publish' or 'unpublish'
+   * it will first visit the view of a node so that the relevant
+   * tabs can be generated.
+   *
+   * @param int $nid
+   *   The node nid
+   * @param string $op
+   *   An operation such as 'view', 'edit', 'publish', 'unpublish'
+   * @param int $expected_response
+   *   The expexted response code. If the user should not be able to
+   *   see the 'publish' or 'unpublish' tabs, set this to 403, otherwise
+   *   200.
+   * @param string $msg
+   *   (optional) An assertion log message.
+   */
+  public function assertNodeOperationAccess($nid, $op, $expected_response, $msg = '') {
+    if (in_array($op, array('publish', 'unpublish'))) {
+
+      // Visit the edit page first to check for the published checkbox.
+      $this->drupalGet("node/{$nid}/edit");
+      $view_response = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
+      if ($view_response != 200) {
+        $msg .= t('Could not edit the node. Response code: @response', array('@response' => $view_response));
+        $this->assert($expected_response == $view_response, $msg);
+        return;
+      }
+
+      // Check the checkbox exists.
+      $elements = $this->xpath('//input[@id=:id]', array(':id' => 'edit-status'));
+      if (!isset($elements[0])) {
+        // No checkboxes.
+        $msg .= t('Published status checkbox is not accessible.');
+        $this->assert($expected_response != 200, $msg);
+        return;
+      }
+
+      // At this point the response code for checkboxes is irrelevant, if
+      // they can access the edit page and see the checkbox, they can edit it.
+      $expected_response = 200;
+
+      // Tick or untick the published checkbox and submit the form.
+      $edit_status = ($op == 'publish');
+      $this->drupalPost("node/{$nid}/edit", array('status' => $edit_status), t('Save'));
+    }
+    else {
+      $url = $op == 'view' ? "node/{$nid}" : "node/$nid/$op";
+      $this->drupalGet($url);
+    }
+
+    $this->assertResponse($expected_response, $msg);
   }
 }
