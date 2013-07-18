@@ -30,7 +30,7 @@ abstract class PublishContentWebTestBase extends DrupalWebTestCase {
    * @param string $msg
    *   (optional) An assertion log message.
    */
-  abstract function assertNodeOperationAccess($nid, $op, $expected_response, $msg = '');
+  public abstract function assertNodeOperationAccess($nid, $op, $expected_response, $msg = '');
 
   /**
    * Assert the status of a given node.
@@ -138,8 +138,7 @@ abstract class PublishContentWebTestBase extends DrupalWebTestCase {
   }
 
   /**
-   * Test the access for the owner of a node without the permission to
-   * publish or unpublish.
+   * Check no publish permission by node owner.
    */
   public function testNoPublishPermissionByOwner() {
     $web_user = $this->drupalCreateUser(array('access content'));
@@ -161,8 +160,7 @@ abstract class PublishContentWebTestBase extends DrupalWebTestCase {
   }
 
   /**
-   * Test that publishcontent module does not interfere with the normal
-   * Drupal node access permissions.
+   * Check publishcontent module does not interfere with the normal Drupal.
    */
   public function testNoPermissionAndNotOwner() {
     $node = $this->drupalCreateNode(
@@ -393,6 +391,7 @@ class PublishContentTabTests extends PublishContentWebTestBase {
 
     $this->assertResponse($expected_response, $msg);
   }
+
 }
 
 /**
