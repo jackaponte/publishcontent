@@ -280,8 +280,23 @@ function publishcontent_toggle_status($node) {
   if (in_array('revision', $node_options)) {
     $node->revision = 1;
   }
+
+  // Save the status we want to set.
+  $status = $node->status;
+
+  // Try to update the node.
   node_save($node);
-  drupal_set_message(_publishcontent_get_message($node->nid, $node->title, $node->status));
+
+  // Validate the status has changed.
+  if ($status == $node->status) {
+    // Everything went well.
+    drupal_set_message(_publishcontent_get_message($node->nid, $node->title, $node->status));
+  }
+  else {
+    // Prevent the user something went wrong.
+    drupal_set_message(t('The status of the node could not be updated.'), 'error');
+  }
+
   drupal_goto($_SERVER['HTTP_REFERER']);
 }
 
