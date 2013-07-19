@@ -138,6 +138,64 @@ abstract class PublishContentWebTestBase extends DrupalWebTestCase {
   }
 
   /**
+   * Assert the current user can publish a node from the listing test page.
+   */
+  public function assertCanPublishFromLinksPage($node) {
+    $status = $node->status;
+    $this->setNodeStatus($node, 0, 'Start test with an unpublished node');
+    $this->drupalGet('publishcontent-links');
+    $this->assertResponse(200);
+    $this->assertLink('publish-' . $node->nid);
+    $this->assertNoLink('unpublish-' . $node->nid);
+    $this->clickLink('publish-' . $node->nid);
+    $this->assertResponse(200);
+    $this->assertNodeStatus($node->nid, 1);
+    $this->setNodeStatus($node, $status, 'Reset status');
+  }
+
+  /**
+   * Assert the current user cannot publish a node from the listing test page.
+   */
+  public function assertCannotPublishFromLinksPage($node) {
+    $status = $node->status;
+    $this->setNodeStatus($node, 0, 'Start test with an unpublished node');
+    $this->drupalGet('publishcontent-links');
+    $this->assertResponse(200);
+    $this->assertNoLink('publish-' . $node->nid);
+    $this->assertNoLink('unpublish-' . $node->nid);
+    $this->setNodeStatus($node, $status, 'Reset status');
+  }
+
+  /**
+   * Assert the current user can unpublish a node from the listing test page.
+   */
+  public function assertCanUnpublishFromLinksPage($node) {
+    $status = $node->status;
+    $this->setNodeStatus($node, 1, 'Start test with a published node');
+    $this->drupalGet('publishcontent-links');
+    $this->assertResponse(200);
+    $this->assertLink('unpublish-' . $node->nid);
+    $this->assertNoLink('publish-' . $node->nid);
+    $this->clickLink('unpublish-' . $node->nid);
+    $this->assertResponse(200);
+    $this->assertNodeStatus($node->nid, 0);
+    $this->setNodeStatus($node, $status, 'Reset status');
+  }
+
+  /**
+   * Assert the current user cannot unpublish a node from the listing test page.
+   */
+  public function assertCannotUnpublishFromLinksPage($node) {
+    $status = $node->status;
+    $this->setNodeStatus($node, 1, 'Start test with a published node');
+    $this->drupalGet('publishcontent-links');
+    $this->assertResponse(200);
+    $this->assertNoLink('publish-' . $node->nid);
+    $this->assertNoLink('unpublish-' . $node->nid);
+    $this->setNodeStatus($node, $status, 'Reset status');
+  }
+
+  /**
    * Check no publish permission by node owner.
    */
   public function testNoPublishPermissionByOwner() {
@@ -303,6 +361,89 @@ abstract class PublishContentWebTestBase extends DrupalWebTestCase {
     $this->assertCurrentUserCanUnpublish($node3);
   }
 
+  /**
+   * Test basic publish ability using the publishcontent_test module.
+   */
+  public function testBasicPublishCallback() {
+    $type = 'page';
+    variable_set('publishcontent_' . $type, TRUE);
+    variable_set('publishcontent_article', TRUE);
+
+    $web_user_1 = $this->drupalCreateUser(array(
+      'access content',
+      'publish any content',
+    ));
+
+    $web_user_2 = $this->drupalCreateUser(array(
+      'access content',
+      'unpublish any content',
+    ));
+
+    $web_user_3 = $this->drupalCreateUser(array(
+      'access content',
+      'publish any content',
+      'unpublish any content',
+    ));
+
+    $web_user_4 = $this->drupalCreateUser(array(
+      'access content',
+      'publish any ' . $type . ' content',
+    ));
+
+    $web_user_5 = $this->drupalCreateUser(array(
+      'access content',
+      'unpublish any ' . $type . ' content',
+    ));
+
+    $web_user_6 = $this->drupalCreateUser(array(
+      'access content',
+      'publish any ' . $type . ' content',
+      'unpublish any ' . $type . ' content',
+    ));
+
+    $web_user_7 = $this->drupalCreateUser(array(
+      'access content',
+      'publish any article content',
+      'unpublish any article content',
+    ));
+
+    $node = $this->drupalCreateNode(
+      array(
+        'type' => $type,
+        'uid' => 1,
+        'status' => 0,
+      )
+    );
+
+    $this->drupalLogin($web_user_1);
+    $this->assertCanPublishFromLinksPage($node, 'Someone with publish any content can publish page node');
+    $this->assertCannotUnpublishFromLinksPage($node, 'Someone with publish any content cannot unpublish page node');
+
+    $this->drupalLogin($web_user_2);
+    $this->assertCannotPublishFromLinksPage($node, 'Someone with unpublish any content cannot publish page node');
+    $this->assertCanUnpublishFromLinksPage($node, 'Someone with unpublish any content can unpublish page node');
+
+    $this->drupalLogin($web_user_3);
+    $this->assertCanPublishFromLinksPage($node, 'Someone with publish and unpublish any content can publish page node');
+    $this->assertCanUnpublishFromLinksPage($node, 'Someone with publish and unpublish any content can unpublish page node');
+
+    $this->drupalLogin($web_user_4);
+    $this->assertCanPublishFromLinksPage($node, 'Someone with publish any page nodes can publish a page node');
+    $this->assertCannotUnpublishFromLinksPage($node, 'Someone with publish any page nodes cannot unpublish page node');
+
+    $this->drupalLogin($web_user_5);
+    $this->assertCannotPublishFromLinksPage($node, 'Someone with unpublish any page node cannot publish a page node');
+    $this->assertCanUnpublishFromLinksPage($node, 'Someone with unpublish any page node can unpublish a page node');
+
+    $this->drupalLogin($web_user_6);
+    $this->assertCanPublishFromLinksPage($node, 'Someone with publish and unpublish any page node can publish a page node');
+    $this->assertCanUnpublishFromLinksPage($node, 'Someone with publish and unpublish any page node can unpublish a page node');
+
+    $this->drupalLogin($web_user_7);
+    $this->assertCannotPublishFromLinksPage($node, 'Someone with publish any article content cannot publish page content');
+    $this->assertCannotUnpublishFromLinksPage($node, 'Someone with unpublish any article content cannot unpublish page content');
+  }
+
 }
 
 /**
@@ -325,7 +466,7 @@ class PublishContentTabTests extends PublishContentWebTestBase {
    * Test setup instructions.
    */
   public function setUp() {
-    parent::setUp('publishcontent');
+    parent::setUp('publishcontent', 'publishcontent_test');
     variable_set('publishcontent_method', PUBLISHCONTENT_METHOD_TABS);
   }
 
@@ -414,7 +555,7 @@ class PublishContentButtonTests extends PublishContentWebTestBase {
    * Test setup instructions.
    */
   public function setUp() {
-    parent::setUp('publishcontent');
+    parent::setUp('publishcontent', 'publishcontent_test');
     variable_set('publishcontent_method', PUBLISHCONTENT_METHOD_BUTTON);
   }
 
@@ -491,7 +632,7 @@ class PublishContentCheckboxTests extends PublishContentWebTestBase {
    * Test setup instructions.
    */
   public function setUp() {
-    parent::setUp('publishcontent');
+    parent::setUp('publishcontent', 'publishcontent_test');
     variable_set('publishcontent_method', PUBLISHCONTENT_METHOD_NONE);
   }
 

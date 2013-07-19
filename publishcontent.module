@@ -17,7 +17,7 @@ define('PUBLISHCONTENT_METHOD_TABS', 3);
 function publishcontent_menu() {
   $items = array();
 
-  $method = _publishcontent_get_method();
+  $menu_type = _publishcontent_get_menutype();
 
   $items['admin/config/content/publishcontent'] = array(
     'title' => 'Publish content settings',
@@ -30,35 +30,29 @@ function publishcontent_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  if (in_array($method, array(PUBLISHCONTENT_METHOD_ACTION_LINKS, PUBLISHCONTENT_METHOD_TABS))) {
+  $items['node/%publishcontent_tab/publish/%publishcontent_security_token'] = array(
+    'title' => 'Publish',
+    'page callback' => 'publishcontent_toggle_status',
+    'page arguments' => array(1),
+    'access callback' => '_publishcontent_publish_access',
+    'access arguments' => array(1, 3),
+    'weight' => 5,
+    'type' => $menu_type,
+    'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-publish'))),
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
 
-    $menu_type = ($method == PUBLISHCONTENT_METHOD_TABS) ? MENU_LOCAL_ACTION : MENU_LOCAL_TASK;
-
-    $items['node/%publishcontent_tab/publish/%publishcontent_security_token'] = array(
-      'title' => 'Publish',
-      'page callback' => 'publishcontent_toggle_status',
-      'page arguments' => array(1),
-      'access callback' => '_publishcontent_publish_access',
-      'access arguments' => array(1, 3),
-      'weight' => 5,
-      'type' => $menu_type,
-      'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-publish'))),
-      'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-    );
-
-    $items['node/%publishcontent_tab/unpublish/%publishcontent_security_token'] = array(
-      'title' => 'Unpublish',
-      'page callback' => 'publishcontent_toggle_status',
-      'page arguments' => array(1),
-      'access callback' => '_publishcontent_unpublish_access',
-      'access arguments' => array(1, 3),
-      'weight' => 5,
-      'type' => $menu_type,
-      'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-unpublish'))),
-      'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-    );
-
-  }
+  $items['node/%publishcontent_tab/unpublish/%publishcontent_security_token'] = array(
+    'title' => 'Unpublish',
+    'page callback' => 'publishcontent_toggle_status',
+    'page arguments' => array(1),
+    'access callback' => '_publishcontent_unpublish_access',
+    'access arguments' => array(1, 3),
+    'weight' => 5,
+    'type' => $menu_type,
+    'options' => array('attributes' => array('class' => array('publishcontent-link', 'publishcontent-unpublish'))),
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
 
   return $items;
 }
@@ -69,7 +63,7 @@ function publishcontent_menu() {
 function publishcontent_tab_load($nid) {
   if (is_numeric($nid)) {
     $node = node_load($nid);
-    if (variable_get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS) == PUBLISHCONTENT_METHOD_TABS) {
+    if (variable_get('publishcontent_' . $node->type, TRUE)) {
       return $node;
     }
   }
@@ -132,6 +126,10 @@ function publishcontent_publish_access($node, $account = NULL) {
   if (empty($account)) {
     global $user;
     $account = $user;
+  }
+
+  if (!variable_get('publishcontent_' . $node->type, TRUE)) {
+    return FALSE;
   }
 
   $access = FALSE;
@@ -459,6 +457,23 @@ function publishcontent_views_data_alter(&$data) {
  */
 function _publishcontent_get_method() {
   return variable_get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS);
+}
+
+/**
+ * Helper function for hook_menu to get the menu type for the current setup.
+ */
+function _publishcontent_get_menutype() {
+  $method = _publishcontent_get_method();
+  $menu_type = MENU_CALLBACK;
+
+  if ($method == PUBLISHCONTENT_METHOD_TABS) {
+    $menu_type = MENU_LOCAL_TASK;
+  }
+  elseif ($method == PUBLISHCONTENT_METHOD_ACTION_LINKS) {
+    $menu_type = MENU_LOCAL_ACTION;
+  }
+
+  return $menu_type;
 }
 
 /**
