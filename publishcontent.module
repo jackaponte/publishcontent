@@ -295,6 +295,9 @@ function publishcontent_toggle_status($node) {
     drupal_set_message(t('The status of the node could not be updated.'), 'error');
   }
 
+  // Clear the page and block caches.
+  cache_clear_all();
+
   drupal_goto($_SERVER['HTTP_REFERER']);
 }
 
