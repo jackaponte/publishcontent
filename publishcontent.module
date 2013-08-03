@@ -332,9 +332,20 @@ function publishcontent_form_node_form_alter(&$form, &$form_state) {
     return;
   }
 
-  if (empty($node->status) && !publishcontent_publish_access($node)) {
-    // Publish content is unavailable for user without publish access.
-    return;
+  if (!publishcontent_publish_access($node)) {
+    if (!isset($node->nid)) {
+      // Ensure users without permission to publish can't do so because of the
+      // default setting in the content type. This setting controls the actual
+      // value in $form_state.
+      $form['options']['status']['#default_value'] = 0;
+      // These won't affect $form_state but also need to be updated
+      $form['#node']->status = 0;
+      $node->status = 0;
+    }
+    if (empty($node->status)) {
+      // Publish content is unavailable for user without publish access.
+      return;
+    }
   }
 
   if (!empty($node->status) && !publishcontent_unpublish_access($node)) {
