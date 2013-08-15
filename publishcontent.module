@@ -551,7 +551,7 @@ function og_publishcontent_unpublish_access($node, $account) {
       $group_access = $node->status &&
         (og_user_access($entity_type, $entity_id, 'administer nodes', $account)
         || og_user_access($entity_type, $entity_id, 'unpublish any content', $account)
-        || (og_user_access($entity_type, $entity_id, 'unpublish own content', $account) && $account->uid == $account->uid)
+        || (og_user_access($entity_type, $entity_id, 'unpublish own content', $account) && $account->uid == $node->uid)
         || (og_user_access($entity_type, $entity_id, 'unpublish editable content') && node_access('update', $node))
         || (og_user_access($entity_type, $entity_id, 'unpublish own ' . check_plain($node->type) . ' content', $account) && $account->uid == $node->uid)
         || og_user_access($entity_type, $entity_id, 'unpublish any ' . check_plain($node->type) . ' content', $account)
