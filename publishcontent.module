@@ -11,6 +11,10 @@ define('PUBLISHCONTENT_METHOD_ACTION_LINKS', 1);
 define('PUBLISHCONTENT_METHOD_BUTTON', 2);
 define('PUBLISHCONTENT_METHOD_TABS', 3);
 
+define('PUBLISHCONTENT_ACCESS_ALLOW', TRUE);
+define('PUBLISHCONTENT_ACCESS_DENY', FALSE);
+define('PUBLISHCONTENT_ACCESS_IGNORE', NULL);
+
 /**
  * Implements hook_menu().
  */
@@ -136,11 +140,11 @@ function publishcontent_publish_access($node, $account = NULL) {
 
   foreach (module_invoke_all('publishcontent_publish_access', $node, $account) as $module_access) {
     if (!is_null($module_access)) {
-      if ($module_access === FALSE) {
+      if ($module_access === PUBLISHCONTENT_ACCESS_DENY) {
         // Anything denying access gets priority.
         return FALSE;
       }
-      elseif ($module_access === TRUE) {
+      elseif ($module_access === PUBLISHCONTENT_ACCESS_ALLOW) {
         // Something grants access.
         $access = TRUE;
       }
@@ -154,7 +158,7 @@ function publishcontent_publish_access($node, $account = NULL) {
  * Implements hook_publishcontent_publish_access().
  */
 function publishcontent_publishcontent_publish_access($node, $user) {
-  return (user_access('administer nodes')
+  $access = (user_access('administer nodes')
     || user_access('publish any content')
     || (user_access('publish own content') && $user->uid == $node->uid)
     || (user_access('publish editable content') && (!isset($node->nid) || node_access('update', $node)))
@@ -162,6 +166,8 @@ function publishcontent_publishcontent_publish_access($node, $user) {
     || user_access('publish any ' . check_plain($node->type) . ' content')
     || (user_access('publish editable ' . check_plain($node->type) . ' content') && (!isset($node->nid) || node_access('update', $node)))
   );
+
+  return $access ? PUBLISHCONTENT_ACCESS_ALLOW : PUBLISHCONTENT_ACCESS_IGNORE;
 }
 
 /**
@@ -185,11 +191,11 @@ function publishcontent_unpublish_access($node, $account = NULL) {
 
   foreach (module_invoke_all('publishcontent_unpublish_access', $node, $account) as $module_access) {
     if (!is_null($module_access)) {
-      if ($module_access === FALSE) {
+      if ($module_access === PUBLISHCONTENT_ACCESS_DENY) {
         // Anything denying access gets priority.
         return FALSE;
       }
-      elseif ($module_access === TRUE) {
+      elseif ($module_access === PUBLISHCONTENT_ACCESS_ALLOW) {
         // Something grants access.
         $access = TRUE;
       }
@@ -203,7 +209,7 @@ function publishcontent_unpublish_access($node, $account = NULL) {
  * Implements hook_publishcontent_unpublish_access().
  */
 function publishcontent_publishcontent_unpublish_access($node, $user) {
-  return (user_access('administer nodes')
+  $access = (user_access('administer nodes')
     || user_access('unpublish any content')
     || (user_access('unpublish own content') && $user->uid == $node->uid)
     || (user_access('unpublish editable content') && (!isset($node->nid) || node_access('update', $node)))
@@ -211,6 +217,8 @@ function publishcontent_publishcontent_unpublish_access($node, $user) {
     || user_access('unpublish any ' . check_plain($node->type) . ' content')
     || (user_access('unpublish editable ' . check_plain($node->type) . ' content') && (!isset($node->nid) || node_access('update', $node)))
   );
+
+  return $access ? PUBLISHCONTENT_ACCESS_ALLOW : PUBLISHCONTENT_ACCESS_IGNORE;
 }
 
 /**
@@ -533,9 +541,7 @@ function og_publishcontent_publish_access($node, $account) {
     }
   }
 
-  if ($access) {
-    return TRUE;
-  }
+  return $access ? PUBLISHCONTENT_ACCESS_ALLOW : PUBLISHCONTENT_ACCESS_IGNORE;
 }
 
 /**
@@ -564,7 +570,5 @@ function og_publishcontent_unpublish_access($node, $account) {
     }
   }
 
-  if ($access) {
-    return TRUE;
-  }
+  return $access ? PUBLISHCONTENT_ACCESS_ALLOW : PUBLISHCONTENT_ACCESS_IGNORE;
 }
