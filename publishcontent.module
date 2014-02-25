@@ -67,7 +67,7 @@ function publishcontent_menu() {
 function publishcontent_tab_load($nid) {
   if (is_numeric($nid)) {
     $node = node_load($nid);
-    if (variable_get('publishcontent_' . $node->type, TRUE)) {
+    if (variable_get('publishcontent_' . $node->type, FALSE)) {
       return $node;
     }
   }
@@ -91,7 +91,7 @@ function _publishcontent_publish_access($node, $token = FALSE) {
   if ($token && !drupal_valid_token($token)) {
     return FALSE;
   }
-  if (!variable_get('publishcontent_' . $node->type, TRUE)) {
+  if (!variable_get('publishcontent_' . $node->type, FALSE)) {
     return FALSE;
   }
 
@@ -108,7 +108,7 @@ function _publishcontent_unpublish_access($node, $token = FALSE) {
   if ($token && !drupal_valid_token($token)) {
     return FALSE;
   }
-  if (!variable_get('publishcontent_' . $node->type, TRUE)) {
+  if (!variable_get('publishcontent_' . $node->type, FALSE)) {
     return FALSE;
   }
 
@@ -127,16 +127,17 @@ function _publishcontent_unpublish_access($node, $token = FALSE) {
  *   TRUE if user can publish the node.
  */
 function publishcontent_publish_access($node, $account = NULL) {
+  $access = FALSE;
+
+  // Variable may be '0' or '1' or not set.
+  if (!variable_get('publishcontent_' . $node->type, FALSE)) {
+    return $access;
+  }
+
   if (empty($account)) {
     global $user;
     $account = $user;
   }
-
-  if (!variable_get('publishcontent_' . $node->type, TRUE)) {
-    return FALSE;
-  }
-
-  $access = FALSE;
 
   foreach (module_invoke_all('publishcontent_publish_access', $node, $account) as $module_access) {
     if (!is_null($module_access)) {
@@ -241,10 +242,8 @@ function publishcontent_permission() {
   );
 
   foreach (node_type_get_types() as $type) {
-    if (!variable_get('publishcontent_' . $type->type, TRUE)) {
-      continue;
-    }
-    if (isset($type->type)) {
+    // Only show permissions for activated node types.
+    if (isset($type->type) && variable_get('publishcontent_' . $type->type, FALSE)) {
       $perms['publish any ' . $type->type . ' content'] = array(
         'title' => t('Publish any @type content', array('@type' => $type->name)));
       $perms['publish own ' . $type->type . ' content'] = array(
@@ -315,10 +314,11 @@ function publishcontent_toggle_status($node) {
  * Allow to use the 'Publishing options' on the edit/add page.
  */
 function publishcontent_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  // Do not activate this option by default.
   $form['workflow']['publishcontent'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable publishcontent'),
-    '#default_value' => variable_get('publishcontent_' . $form['#node_type']->type, TRUE),
+    '#default_value' => variable_get('publishcontent_' . $form['#node_type']->type, FALSE),
     '#description' => t('Display publish or unpublish link for nodes of this type.'),
   );
 }
@@ -335,8 +335,8 @@ function publishcontent_form_node_form_alter(&$form, &$form_state) {
 
   $node = $form['#node'];
 
-  if (!variable_get('publishcontent_' . $node->type, TRUE)) {
-    // Publish content is disabled for this content type.
+  if (!variable_get('publishcontent_' . $node->type, FALSE)) {
+    // Publish content is not set or disabled for this content type.
     return;
   }
 
@@ -346,7 +346,7 @@ function publishcontent_form_node_form_alter(&$form, &$form_state) {
       // default setting in the content type. This setting controls the actual
       // value in $form_state.
       $form['options']['status']['#default_value'] = 0;
-      // These won't affect $form_state but also need to be updated
+      // These won't affect $form_state but also need to be updated.
       $form['#node']->status = 0;
       $node->status = 0;
     }
