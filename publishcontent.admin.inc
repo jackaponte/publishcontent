@@ -23,5 +23,23 @@ function publishcontent_config_form($form, &$form_state) {
     ),
   );
 
+  // Provide a central place to select which content types are supported.
+  $node_types = node_type_get_names();
+  $form['content_types_fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Content Types'),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#description' => t('Choose the content types to support.'),
+  );
+
+  foreach ($node_types as $machine_name => $human_name) {
+    $form['content_types_fieldset']['publishcontent_' . $machine_name] = array(
+      '#type' => 'checkbox',
+      '#title' => $human_name,
+      '#default_value' => variable_get('publishcontent_' . $machine_name, FALSE),
+    );
+  }
+
   return system_settings_form($form);
 }
