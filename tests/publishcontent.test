@@ -165,6 +165,11 @@ abstract class PublishContentWebTestBase extends DrupalWebTestCase {
     $this->assertNoLink('unpublish-' . $node->nid);
     $this->clickLink('publish-' . $node->nid);
     $this->assertResponse(200);
+
+    // Submit the confirmation form.
+    $this->drupalPost($this->url, array(), 'Confirm');
+    $this->assertResponse(200);
+
     $this->assertNodeStatus($node->nid, 1);
     $this->setNodeStatus($node, $status, 'Reset status');
   }
@@ -194,6 +199,11 @@ abstract class PublishContentWebTestBase extends DrupalWebTestCase {
     $this->assertNoLink('publish-' . $node->nid);
     $this->clickLink('unpublish-' . $node->nid);
     $this->assertResponse(200);
+
+    // Submit the confirmation form.
+    $this->drupalPost($this->url, array(), 'Confirm');
+    $this->assertResponse(200);
+
     $this->assertNodeStatus($node->nid, 0);
     $this->setNodeStatus($node, $status, 'Reset status');
   }
@@ -529,6 +539,10 @@ class PublishContentTabTests extends PublishContentWebTestBase {
 
       // Now visit the tab.
       $this->clickLink($tab_link_text);
+
+      // Submit the confirmation form.
+      $this->drupalPost($this->url, array(), 'Confirm');
+      $this->assertResponse(200);
 
       $node = node_load($nid);
 
