@@ -602,7 +602,7 @@ class PublishContentButtonTests extends PublishContentWebTestBase {
    * @param string $op
    *   An operation such as 'view', 'edit', 'publish', 'unpublish'
    * @param int $expected_response
-   *   The expexted response code. If the user should not be able to
+   *   The expected response code. If the user should not be able to
    *   see the 'publish' or 'unpublish' tabs, set this to 403, otherwise
    *   200.
    * @param string $msg
@@ -679,7 +679,7 @@ class PublishContentCheckboxTests extends PublishContentWebTestBase {
    * @param string $op
    *   An operation such as 'view', 'edit', 'publish', 'unpublish'
    * @param int $expected_response
-   *   The expexted response code. If the user should not be able to
+   *   The expected response code. If the user should not be able to
    *   see the 'publish' or 'unpublish' tabs, set this to 403, otherwise
    *   200.
    * @param string $msg
