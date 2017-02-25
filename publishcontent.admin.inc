@@ -13,7 +13,7 @@ function publishcontent_config_form($form, &$form_state) {
   $form['publishcontent_method'] = array(
     '#type' => 'radios',
     '#title' => t('Quick publish method'),
-    '#default_value' => variable_get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS),
+    '#default_value' => $config->get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS),
     '#description' => t('Choose the quick links method. With no quick links, the published checkbox will still appear on the node edit form. Note that a Drupal cache clear occurs after changing this.'),
     '#options' => array(
       PUBLISHCONTENT_METHOD_NONE => t('None.'),
@@ -37,7 +37,7 @@ function publishcontent_config_form($form, &$form_state) {
     $form['content_types_fieldset']['publishcontent_' . $machine_name] = array(
       '#type' => 'checkbox',
       '#title' => $human_name,
-      '#default_value' => variable_get('publishcontent_' . $machine_name, FALSE),
+      '#default_value' => $config->get('publishcontent_' . $machine_name, FALSE),
     );
   }
 
@@ -59,7 +59,7 @@ function publishcontent_config_form($form, &$form_state) {
  * This retains a note about the current quick publish method.
  */
 function publishcontent_config_form_pre_submit(&$form, &$form_submit) {
-  drupal_static('publishcontent_config_form_mode', variable_get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS));
+  drupal_static('publishcontent_config_form_mode', config_get('publishcontent.settings', 'publishcontent_method', PUBLISHCONTENT_METHOD_TABS));
 }
 
 /**
