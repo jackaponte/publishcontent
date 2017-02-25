@@ -14,7 +14,7 @@ function publishcontent_config_form($form, &$form_state) {
     '#type' => 'radios',
     '#title' => t('Quick publish method'),
     '#default_value' => $config->get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS),
-    '#description' => t('Choose the quick links method. With no quick links, the published checkbox will still appear on the node edit form. Note that a Drupal cache clear occurs after changing this.'),
+    '#description' => t('Choose the quick links method. With no quick links, the published checkbox will still appear on the node edit form. Note that a Backdrop cache clear occurs after changing this.'),
     '#options' => array(
       PUBLISHCONTENT_METHOD_NONE => t('None.'),
       PUBLISHCONTENT_METHOD_ACTION_LINKS => t('Action links on node view.'),
@@ -59,7 +59,7 @@ function publishcontent_config_form($form, &$form_state) {
  * This retains a note about the current quick publish method.
  */
 function publishcontent_config_form_pre_submit(&$form, &$form_submit) {
-  drupal_static('publishcontent_config_form_mode', config_get('publishcontent.settings', 'publishcontent_method', PUBLISHCONTENT_METHOD_TABS));
+  backdrop_static('publishcontent_config_form_mode', config_get('publishcontent.settings', 'publishcontent_method', PUBLISHCONTENT_METHOD_TABS));
 }
 
 /**
@@ -84,11 +84,11 @@ function publishcontent_config_form_submit($form, &$form_state)
  * method changed then the site cache is flushed.
  */
 function publishcontent_config_form_post_submit(&$form, &$form_submit) {
-  $old_mode = &drupal_static('publishcontent_config_form_mode');
+  $old_mode = &backdrop_static('publishcontent_config_form_mode');
 
   // If the quick access mode changed then flush all caches.
   if ($old_mode != $form_submit['values']['publishcontent_method']) {
-    drupal_flush_all_caches();
-    drupal_set_message('All site caches have been cleared.');
+    backdrop_flush_all_caches();
+    backdrop_set_message('All site caches have been cleared.');
   }
 }
