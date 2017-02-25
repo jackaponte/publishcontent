@@ -9,6 +9,7 @@
  * Administration settings form.
  */
 function publishcontent_config_form($form, &$form_state) {
+  $config = config('publishcontent.settings');
   $form['publishcontent_method'] = array(
     '#type' => 'radios',
     '#title' => t('Quick publish method'),
@@ -41,7 +42,12 @@ function publishcontent_config_form($form, &$form_state) {
   }
 
   $form['#submit'][] = 'publishcontent_config_form_pre_submit';
-  $form = system_settings_form($form);
+  $form['#submit'][] = 'publishcontent_config_form_submit';
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
+  '#type' => 'submit',
+  '#value' => t('Save configuration'),
+);
   $form['#submit'][] = 'publishcontent_config_form_post_submit';
 
   return $form;
@@ -54,6 +60,21 @@ function publishcontent_config_form($form, &$form_state) {
  */
 function publishcontent_config_form_pre_submit(&$form, &$form_submit) {
   drupal_static('publishcontent_config_form_mode', variable_get('publishcontent_method', PUBLISHCONTENT_METHOD_TABS));
+}
+
+/**
+ * Form submission function.
+ *
+ */
+
+function publishcontent_config_form_submit($form, &$form_state)
+{
+    $config = config('publishcontent.settings');
+    foreach ($form_state['values'] as $key => $value) {
+      $config->set($key, $value);
+    }
+    $config->save();
+    backdrop_set_message(t('The configuration options have been saved.'));
 }
 
 /**
